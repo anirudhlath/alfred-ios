@@ -11,8 +11,7 @@ struct MainTabView: View {
             }
 
             NavigationStack {
-                Text("Notifications")
-                    .navigationTitle("Notifications")
+                NotificationsView()
             }
             .tabItem {
                 Label("Notifications", systemImage: "bell")
