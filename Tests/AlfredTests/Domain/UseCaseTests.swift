@@ -1,6 +1,5 @@
 import Foundation
 import Testing
-import AlfredKit
 @testable import Alfred
 
 // MARK: - Mock Implementations
@@ -11,7 +10,7 @@ final class MockChatRepository: ChatRepositoryProtocol, @unchecked Sendable {
     var sentText: String?
     var sentAudioData: Data?
     var messages: AsyncStream<Message> { AsyncStream { _ in } }
-    var connectionState: AsyncStream<ConnectionState> { AsyncStream { _ in } }
+    var connectionState: AsyncStream<AppConnectionState> { AsyncStream { _ in } }
 
     func connect() async throws { connectCalled = true }
     func disconnect() { disconnectCalled = true }
@@ -52,16 +51,15 @@ final class MockNotificationRepository: NotificationRepositoryProtocol, @uncheck
     func registerDevice(token: Data) async throws {
         registeredToken = token
     }
+    func unregisterDevice() async throws {}
 }
 
 final class MockOnboardingRepository: OnboardingRepositoryProtocol, @unchecked Sendable {
     var submittedPreferences: UserPreferences?
+    var isComplete: Bool = false
 
     func submit(preferences: UserPreferences) async throws {
         submittedPreferences = preferences
-    }
-    func fetchServerConfig() async throws -> ServerConfig {
-        ServerConfig(host: "localhost", port: 8081, useTLS: false)
     }
 }
 
@@ -140,7 +138,6 @@ final class MockIntegrationRepository: IntegrationRepositoryProtocol, @unchecked
     let useCase = ObserveMessagesUseCase(chatRepo: chatRepo)
 
     let stream = useCase.execute()
-    // Verify we get an AsyncStream back (compile-time type check)
     let _: AsyncStream<Message> = stream
 }
 
@@ -172,14 +169,15 @@ final class MockIntegrationRepository: IntegrationRepositoryProtocol, @unchecked
     let useCase = SubmitOnboardingUseCase(onboardingRepo: onboardingRepo)
 
     let prefs = UserPreferences(
-        name: "Anirudh",
-        proactivityLevel: .medium,
-        voiceEnabled: true,
-        notificationsEnabled: true
+        wakeTime: "7:00 AM",
+        workAddress: nil,
+        dietaryRestrictions: nil,
+        proactivityLevel: .moderate,
+        guestControls: []
     )
     try await useCase.execute(preferences: prefs)
-    #expect(onboardingRepo.submittedPreferences?.name == "Anirudh")
-    #expect(onboardingRepo.submittedPreferences?.proactivityLevel == .medium)
+    #expect(onboardingRepo.submittedPreferences?.wakeTime == "7:00 AM")
+    #expect(onboardingRepo.submittedPreferences?.proactivityLevel == .moderate)
 }
 
 // MARK: - ManageIntegrationsUseCase Tests

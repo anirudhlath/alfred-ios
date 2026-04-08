@@ -1,5 +1,4 @@
 import Foundation
-import AlfredKit
 
 final class ConnectUseCase: Sendable {
     private let chatRepo: any ChatRepositoryProtocol
