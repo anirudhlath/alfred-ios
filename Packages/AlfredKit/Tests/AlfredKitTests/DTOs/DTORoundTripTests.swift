@@ -12,7 +12,7 @@ import Testing
     #expect(json["content"] as? String == "Hello")
     #expect(json["identity"] as? String == "sir")
     #expect(json["channel"] as? String == "ios")
-    #expect(json["session_id"] == nil || json["session_id"] is NSNull)
+    #expect(json.keys.contains("session_id") == false)
 }
 
 @Test func audioMessageDTOEncodesCorrectly() throws {

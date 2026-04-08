@@ -6,6 +6,11 @@ public struct SessionDTO: Codable, Sendable {
     public let type: String
     public let sessionId: String
 
+    public init(type: String, sessionId: String) {
+        self.type = type
+        self.sessionId = sessionId
+    }
+
     enum CodingKeys: String, CodingKey {
         case type
         case sessionId = "session_id"
@@ -19,6 +24,13 @@ public struct ServerResponseDTO: Codable, Sendable {
     public let sessionId: String
     public let audio: String?
 
+    public init(type: String, text: String, sessionId: String, audio: String? = nil) {
+        self.type = type
+        self.text = text
+        self.sessionId = sessionId
+        self.audio = audio
+    }
+
     enum CodingKeys: String, CodingKey {
         case type, text, audio
         case sessionId = "session_id"
@@ -30,6 +42,12 @@ public struct TranscriptionDTO: Codable, Sendable {
     public let type: String
     public let text: String
     public let sessionId: String
+
+    public init(type: String, text: String, sessionId: String) {
+        self.type = type
+        self.text = text
+        self.sessionId = sessionId
+    }
 
     enum CodingKeys: String, CodingKey {
         case type, text
@@ -45,6 +63,14 @@ public struct NotificationDTO: Codable, Sendable {
     public let urgency: String
     public let notificationId: String?
 
+    public init(type: String, title: String, body: String, urgency: String, notificationId: String? = nil) {
+        self.type = type
+        self.title = title
+        self.body = body
+        self.urgency = urgency
+        self.notificationId = notificationId
+    }
+
     enum CodingKeys: String, CodingKey {
         case type, title, body, urgency
         case notificationId = "notification_id"
@@ -56,6 +82,12 @@ public struct VoiceNotificationDTO: Codable, Sendable {
     public let type: String
     public let title: String
     public let audio: String
+
+    public init(type: String, title: String, audio: String) {
+        self.type = type
+        self.title = title
+        self.audio = audio
+    }
 }
 
 /// Error from server.
@@ -63,6 +95,12 @@ public struct ErrorDTO: Codable, Sendable {
     public let type: String
     public let text: String
     public let sessionId: String
+
+    public init(type: String, text: String, sessionId: String) {
+        self.type = type
+        self.text = text
+        self.sessionId = sessionId
+    }
 
     enum CodingKeys: String, CodingKey {
         case type, text

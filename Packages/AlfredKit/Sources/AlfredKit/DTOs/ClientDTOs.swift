@@ -21,6 +21,15 @@ public struct TextMessageDTO: Codable, Sendable {
         case type, content, identity, channel
         case sessionId = "session_id"
     }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(type, forKey: .type)
+        try container.encode(content, forKey: .content)
+        try container.encode(identity, forKey: .identity)
+        try container.encode(channel, forKey: .channel)
+        try container.encodeIfPresent(sessionId, forKey: .sessionId)
+    }
 }
 
 /// Audio message sent from client to server (base64 data URL).
