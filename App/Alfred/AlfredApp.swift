@@ -2,9 +2,14 @@ import SwiftUI
 
 @main
 struct AlfredApp: App {
+    @State private var container = AppContainer()
+
     var body: some Scene {
         WindowGroup {
-            Text("Alfred")
+            BiometricGateView {
+                MainTabView()
+            }
+            .environment(container)
         }
     }
 }
