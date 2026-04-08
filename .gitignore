@@ -1,0 +1,29 @@
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+Packages/*/Package.resolved
+
+# macOS
+.DS_Store
+
+# Superpowers brainstorm artifacts
+.superpowers/
+
+# IDE
+.idea/
+.vscode/
+
+# Fastlane (deferred)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/

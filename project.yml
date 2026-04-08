@@ -1,0 +1,51 @@
+name: Alfred
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  bundleIdPrefix: com.anirudhlath
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: 1
+
+packages:
+  AlfredKit:
+    path: Packages/AlfredKit
+
+targets:
+  Alfred:
+    type: application
+    platform: iOS
+    sources:
+      - App/Alfred
+    resources:
+      - App/Alfred/Resources
+    dependencies:
+      - package: AlfredKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.anirudhlath.alfred
+        INFOPLIST_FILE: App/Alfred/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/Alfred/Resources/Alfred.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+    scheme:
+      testTargets:
+        - AlfredTests
+
+  AlfredTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/AlfredTests
+    dependencies:
+      - target: Alfred
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.anirudhlath.alfred.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Alfred.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Alfred"
+        BUNDLE_LOADER: "$(TEST_HOST)"
