@@ -18,8 +18,7 @@ struct MainTabView: View {
             }
 
             NavigationStack {
-                Text("Settings")
-                    .navigationTitle("Settings")
+                SettingsView()
             }
             .tabItem {
                 Label("Settings", systemImage: "gearshape")
