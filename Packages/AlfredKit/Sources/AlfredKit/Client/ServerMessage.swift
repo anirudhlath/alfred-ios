@@ -41,9 +41,9 @@ public enum ServerMessage: Sendable {
 
         case "voice_notification":
             let dto = try decoder.decode(VoiceNotificationDTO.self, from: data)
-            // Decode base64; fall back to raw UTF-8 bytes so any non-empty string produces Data.
-            let audioData = Data(base64Encoded: dto.audio, options: .ignoreUnknownCharacters)
-                ?? Data(dto.audio.utf8)
+            guard let audioData = Data(base64Encoded: dto.audio) else {
+                throw ServerMessageError.malformedPayload("Invalid base64 audio in voice_notification")
+            }
             return .voiceNotification(title: dto.title, audio: audioData)
 
         case "error":

@@ -48,7 +48,7 @@ import Testing
 }
 
 @Test func parsesVoiceNotification() throws {
-    let json = #"{"type": "voice_notification", "title": "Trigger", "audio": "base64wav"}"#.data(using: .utf8)!
+    let json = #"{"type": "voice_notification", "title": "Trigger", "audio": "AQIDBA=="}"#.data(using: .utf8)!
     let msg = try ServerMessage.parse(from: json)
     guard case .voiceNotification(let title, let audio) = msg else {
         Issue.record("Expected .voiceNotification")
