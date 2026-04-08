@@ -4,8 +4,7 @@ struct MainTabView: View {
     var body: some View {
         TabView {
             NavigationStack {
-                Text("Chat")
-                    .navigationTitle("Alfred")
+                ChatView()
             }
             .tabItem {
                 Label("Chat", systemImage: "bubble.left.and.bubble.right")
