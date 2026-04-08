@@ -16,6 +16,9 @@ settings:
 packages:
   AlfredKit:
     path: Packages/AlfredKit
+  SnapshotTesting:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    from: "1.17.0"
 
 targets:
   Alfred:
@@ -45,6 +48,8 @@ targets:
       - Tests/AlfredTests
     dependencies:
       - target: Alfred
+      - package: SnapshotTesting
+        product: SnapshotTesting
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.anirudhlath.alfred.tests
