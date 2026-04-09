@@ -10,13 +10,24 @@ Native SwiftUI iOS client for the Alfred ambient multi-agent system.
 - Clean Architecture: Domain (entities, protocols, use cases) → Data (repos, mappers) → Presentation (MVVM)
 - swift-snapshot-testing for visual regression
 
+## Tooling
+
+- **Xcode 26.3+** with native MCP enabled (Settings → Intelligence → Enable Model Context Protocol)
+- **XcodeGen** (`brew install xcodegen`) — generates .xcodeproj from project.yml
+- **Xcode MCP bridge** (`xcrun mcpbridge`) — configured in Claude Code, provides 20 native tools for build, test, preview capture, simulator control, symbol navigation
+- No need for third-party build MCPs — Xcode's native MCP replaces XcodeBuildMCP
+
 ## Workflow
 
 ```bash
 xcodegen generate                    # regenerate .xcodeproj from project.yml
+cd Packages/AlfredKit && swift test  # AlfredKit package tests (no simulator needed)
+```
+
+Build, test, and simulator tasks should use the Xcode MCP tools when Xcode is running. Fallback:
+```bash
 xcodebuild -scheme Alfred -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build
 xcodebuild -scheme Alfred -destination 'platform=iOS Simulator,name=iPhone 16 Pro' test
-cd Packages/AlfredKit && swift test  # AlfredKit package tests
 ```
 
 ## Key Paths

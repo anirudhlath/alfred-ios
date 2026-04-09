@@ -809,10 +809,10 @@ Add `DEVICE_TOKENS_KEY = "alfred:push:devices"` to the single source of truth fo
 
 | Tool | Install | Purpose |
 |---|---|---|
+| Xcode 26.3+ | Already installed | Build toolchain, simulators, native MCP bridge |
+| Xcode MCP | Xcode → Settings → Intelligence → Enable MCP | 20 native tools: build, test, preview capture, simulator control |
 | XcodeGen | `brew install xcodegen` | Generate .xcodeproj from project.yml |
-| XcodeBuildMCP | `brew tap getsentry/xcodebuildmcp && brew install xcodebuildmcp` | Build, test, run simulator from CLI |
 | swift-snapshot-testing | SPM test dependency | Visual regression testing |
-| Xcode 26+ | Already installed | Build toolchain, simulators |
 
 ### Optional (defer)
 
@@ -820,17 +820,16 @@ Add `DEVICE_TOKENS_KEY = "alfred:push:devices"` to the single source of truth fo
 |---|---|---|
 | Fastlane | Automated TestFlight uploads | When manual uploads feel tedious |
 | asc-mcp | TestFlight build management from CLI | When you want autonomous deploy |
-| ios-preview-mcp | Isolated SwiftUI view rendering | For visual iteration on components |
 
 ### Dev Loop (Claude Code)
 
 ```
 1. Edit Swift code / project.yml
 2. xcodegen generate
-3. XcodeBuildMCP: build_sim
-4. XcodeBuildMCP: build_run_sim
-5. XcodeBuildMCP: screenshot / snapshot_ui
-6. XcodeBuildMCP: test_sim
+3. Xcode MCP: build project
+4. Xcode MCP: run in simulator
+5. Xcode MCP: capture SwiftUI preview / screenshot
+6. Xcode MCP: run tests
 7. Fix, repeat
 ```
 
@@ -850,7 +849,7 @@ Add `DEVICE_TOKENS_KEY = "alfred:push:devices"` to the single source of truth fo
 | All Swift code, project.yml, Package.swift | Initial Xcode team/signing setup |
 | Architecture, ViewModels, Views, tests | Visual QA on simulator/device |
 | Server-side Python changes | Apple Developer portal setup (APNs key, ASC API key) |
-| Build + test via XcodeBuildMCP | TestFlight install + real-device testing |
+| Build + test via Xcode MCP | TestFlight install + real-device testing |
 | Snapshot test maintenance | Critical alert entitlement request (optional) |
 
 ---
