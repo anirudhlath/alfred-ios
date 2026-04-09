@@ -26,3 +26,8 @@ struct MainTabView: View {
         }
     }
 }
+
+#Preview {
+    MainTabView()
+        .environment(AppContainer())
+}

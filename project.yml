@@ -36,7 +36,7 @@ targets:
         INFOPLIST_FILE: App/Alfred/Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: App/Alfred/Resources/Alfred.entitlements
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: ""
+        DEVELOPMENT_TEAM: A3PH6PGY29
     scheme:
       testTargets:
         - AlfredTests
