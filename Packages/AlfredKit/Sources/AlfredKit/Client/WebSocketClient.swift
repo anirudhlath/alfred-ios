@@ -16,23 +16,24 @@ public protocol WebSocketClientProtocol: Sendable {
 /// exponential backoff, session ID management, and message parsing.
 public final class WebSocketClient: WebSocketClientProtocol, Sendable {
     private let state: WebSocketState
+    private let messageBroadcaster = Broadcaster<ServerMessage>()
+    private let stateBroadcaster = Broadcaster<ConnectionState>()
 
-    public let messages: AsyncStream<ServerMessage>
-    public let connectionState: AsyncStream<ConnectionState>
+    /// Each access returns a NEW subscriber stream — multiple consumers
+    /// (chat + notifications) each get every message independently.
+    public var messages: AsyncStream<ServerMessage> {
+        messageBroadcaster.subscribe()
+    }
+
+    public var connectionState: AsyncStream<ConnectionState> {
+        stateBroadcaster.subscribe()
+    }
 
     public init(session: URLSession = .shared) {
-        var msgCont: AsyncStream<ServerMessage>.Continuation!
-        let msgs = AsyncStream<ServerMessage> { msgCont = $0 }
-        self.messages = msgs
-
-        var stateCont: AsyncStream<ConnectionState>.Continuation!
-        let states = AsyncStream<ConnectionState> { stateCont = $0 }
-        self.connectionState = states
-
         self.state = WebSocketState(
             session: session,
-            messagesContinuation: msgCont,
-            stateContinuation: stateCont
+            messageBroadcaster: messageBroadcaster,
+            stateBroadcaster: stateBroadcaster
         )
     }
 
@@ -58,17 +59,17 @@ actor WebSocketState {
     private var reconnectDelay: TimeInterval = 1.0
     private var connectURL: URL?
 
-    private let messagesContinuation: AsyncStream<ServerMessage>.Continuation
-    private let stateContinuation: AsyncStream<ConnectionState>.Continuation
+    private let messageBroadcaster: Broadcaster<ServerMessage>
+    private let stateBroadcaster: Broadcaster<ConnectionState>
 
     init(
         session: URLSession,
-        messagesContinuation: AsyncStream<ServerMessage>.Continuation,
-        stateContinuation: AsyncStream<ConnectionState>.Continuation
+        messageBroadcaster: Broadcaster<ServerMessage>,
+        stateBroadcaster: Broadcaster<ConnectionState>
     ) {
         self.session = session
-        self.messagesContinuation = messagesContinuation
-        self.stateContinuation = stateContinuation
+        self.messageBroadcaster = messageBroadcaster
+        self.stateBroadcaster = stateBroadcaster
     }
 
     func connect(to url: URL, sessionId: String?) {
@@ -77,7 +78,7 @@ actor WebSocketState {
         self.shouldReconnect = true
         self.reconnectDelay = 1.0
 
-        stateContinuation.yield(.connecting)
+        stateBroadcaster.yield(.connecting)
         let wsTask = session.webSocketTask(with: url)
         self.task = wsTask
         wsTask.resume()
@@ -91,7 +92,7 @@ actor WebSocketState {
         shouldReconnect = false
         task?.cancel(with: .goingAway, reason: nil)
         task = nil
-        stateContinuation.yield(.disconnected)
+        stateBroadcaster.yield(.disconnected)
     }
 
     func send(_ message: ClientMessage) async throws {
@@ -118,9 +119,9 @@ actor WebSocketState {
                         if case .session(let sid) = serverMsg {
                             self.sessionId = sid
                             self.reconnectDelay = 1.0
-                            stateContinuation.yield(.connected(sessionId: sid))
+                            stateBroadcaster.yield(.connected(sessionId: sid))
                         }
-                        messagesContinuation.yield(serverMsg)
+                        messageBroadcaster.yield(serverMsg)
                     } catch {
                         // Skip unparseable messages
                     }
@@ -130,7 +131,7 @@ actor WebSocketState {
                     break
                 }
             } catch {
-                stateContinuation.yield(.disconnected)
+                stateBroadcaster.yield(.disconnected)
                 if shouldReconnect {
                     await attemptReconnect()
                 }
@@ -142,7 +143,7 @@ actor WebSocketState {
     private func attemptReconnect() async {
         guard shouldReconnect, let url = connectURL else { return }
 
-        stateContinuation.yield(.connecting)
+        stateBroadcaster.yield(.connecting)
         try? await Task.sleep(nanoseconds: UInt64(reconnectDelay * 1_000_000_000))
         reconnectDelay = min(reconnectDelay * 2, 10.0)
 
