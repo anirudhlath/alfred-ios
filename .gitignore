@@ -1,7 +1,6 @@
-# Xcode
-*.xcodeproj/
-*.xcworkspace/
+# Xcode user data (project files are tracked)
 xcuserdata/
+*.xcworkspace/
 DerivedData/
 build/
 *.ipa

@@ -5,34 +5,40 @@ Native SwiftUI iOS client for the Alfred ambient multi-agent system.
 ## Tech Stack
 
 - Swift 6, SwiftUI, iOS 17+
-- XcodeGen for project generation (`.xcodeproj` is gitignored)
 - AlfredKit: local Swift Package for networking + audio (zero external deps)
 - Clean Architecture: Domain (entities, protocols, use cases) → Data (repos, mappers) → Presentation (MVVM)
 - swift-snapshot-testing for visual regression
 
-## Tooling
+## Xcode MCP (NON-NEGOTIABLE)
 
-- **Xcode 26.3+** with native MCP enabled (Settings → Intelligence → Enable Model Context Protocol)
-- **XcodeGen** (`brew install xcodegen`) — generates .xcodeproj from project.yml
-- **Xcode MCP bridge** (`xcrun mcpbridge`) — configured in Claude Code, provides 20 native tools for build, test, preview capture, simulator control, symbol navigation
-- No need for third-party build MCPs — Xcode's native MCP replaces XcodeBuildMCP
+All Xcode operations MUST go through the native Xcode MCP tools (`xcrun mcpbridge`). This includes:
+
+- **Building:** Use `BuildProject`, NOT `xcodebuild` CLI
+- **Testing:** Use `RunAllTests` / `RunSomeTests`, NOT `xcodebuild test`
+- **File operations:** Use `XcodeWrite`, `XcodeRead`, `XcodeGlob`, `XcodeGrep`, `XcodeLS`, `XcodeMakeDir`, `XcodeMV`, `XcodeRM` — these keep the Xcode project in sync automatically
+- **Previews:** Use `RenderPreview` to capture SwiftUI previews for visual verification
+- **Diagnostics:** Use `XcodeListNavigatorIssues`, `XcodeRefreshCodeIssuesInFile`, `GetBuildLog`
+- **Documentation:** Use `DocumentationSearch` for Apple API docs
+- **Swift REPL:** Use `ExecuteSnippet` for quick Swift evaluation
+
+**Why:** Xcode MCP tools operate within the Xcode project context. Files added via `XcodeWrite` are automatically included in build targets. Using raw `xcodebuild` or filesystem tools bypasses this and can desync the project.
+
+**Exception:** AlfredKit package tests can still use `cd Packages/AlfredKit && swift test` since they're a standalone Swift Package.
 
 ## Workflow
 
-```bash
-xcodegen generate                    # regenerate .xcodeproj from project.yml
-cd Packages/AlfredKit && swift test  # AlfredKit package tests (no simulator needed)
 ```
-
-Build, test, and simulator tasks should use the Xcode MCP tools when Xcode is running. Fallback:
-```bash
-xcodebuild -scheme Alfred -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build
-xcodebuild -scheme Alfred -destination 'platform=iOS Simulator,name=iPhone 16 Pro' test
+1. Edit code via Xcode MCP (XcodeWrite/XcodeUpdate)
+2. Build via Xcode MCP (BuildProject)
+3. Check issues (XcodeListNavigatorIssues)
+4. Preview UI (RenderPreview)
+5. Run tests (RunAllTests / RunSomeTests)
+6. Fix, repeat
 ```
 
 ## Key Paths
 
-- `project.yml` — XcodeGen spec (source of truth for project structure)
+- `Alfred.xcodeproj` — Xcode project (tracked in git, managed by Xcode)
 - `Packages/AlfredKit/` — networking SDK (WebSocket, REST, Audio, DTOs)
 - `App/Alfred/Domain/` — entities, repository protocols, use cases (pure Swift)
 - `App/Alfred/Data/` — repository impls, mappers, Keychain, SwiftData
