@@ -63,7 +63,7 @@ struct PreferencesStepView: View {
             }
 
             Spacer()
-            onboardingButtons(onNext: onNext, onSkip: onSkip)
+            OnboardingButtons(onNext: onNext, onSkip: onSkip)
         }
         .padding()
     }
@@ -102,7 +102,7 @@ struct ProactivityStepView: View {
             .font(.callout)
 
             Spacer()
-            onboardingButtons(onNext: onNext, onSkip: onSkip)
+            OnboardingButtons(onNext: onNext, onSkip: onSkip)
         }
         .padding()
     }
@@ -145,7 +145,7 @@ struct GuestAccessStepView: View {
             }
 
             Spacer()
-            onboardingButtons(onNext: onNext, onSkip: onSkip)
+            OnboardingButtons(onNext: onNext, onSkip: onSkip)
         }
         .padding()
     }
@@ -181,7 +181,7 @@ struct IntegrationsStepView: View {
             }
 
             Spacer()
-            onboardingButtons(onNext: onNext, onSkip: onSkip)
+            OnboardingButtons(onNext: onNext, onSkip: onSkip)
         }
         .padding()
     }
@@ -218,13 +218,17 @@ struct CompletionStepView: View {
 }
 
 // Shared buttons for onboarding steps
-@ViewBuilder
-private func onboardingButtons(onNext: @escaping () -> Void, onSkip: @escaping () -> Void) -> some View {
-    HStack {
-        Button("Skip", action: onSkip)
-            .foregroundStyle(.secondary)
-        Spacer()
-        Button("Next", action: onNext)
-            .buttonStyle(.borderedProminent)
+private struct OnboardingButtons: View {
+    let onNext: () -> Void
+    let onSkip: () -> Void
+
+    var body: some View {
+        HStack {
+            Button("Skip", action: onSkip)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Button("Next", action: onNext)
+                .buttonStyle(.borderedProminent)
+        }
     }
 }

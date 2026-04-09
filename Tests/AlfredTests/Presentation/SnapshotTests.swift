@@ -16,6 +16,7 @@ import SnapshotTesting
 // These tests use XCTest for compatibility with the snapshot library.
 import XCTest
 
+@MainActor
 final class ChatViewSnapshotTests: XCTestCase {
     func testChatViewEmpty() {
         let container = makePreviewContainer()
@@ -38,6 +39,7 @@ final class ChatViewSnapshotTests: XCTestCase {
     }
 }
 
+@MainActor
 final class NotificationsViewSnapshotTests: XCTestCase {
     func testNotificationsViewEmpty() {
         let container = makePreviewContainer()
@@ -50,6 +52,7 @@ final class NotificationsViewSnapshotTests: XCTestCase {
     }
 }
 
+@MainActor
 final class SettingsViewSnapshotTests: XCTestCase {
     func testSettingsView() {
         let container = makePreviewContainer()
@@ -62,6 +65,7 @@ final class SettingsViewSnapshotTests: XCTestCase {
     }
 }
 
+@MainActor
 final class OnboardingSnapshotTests: XCTestCase {
     func testWelcomeStep() {
         let view = WelcomeStepView(onNext: {})

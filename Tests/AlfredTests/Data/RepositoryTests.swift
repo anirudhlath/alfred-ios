@@ -167,10 +167,15 @@ final class MockRESTClient: RESTClientProtocol, @unchecked Sendable {
 }
 
 @Test func onboardingRepoIsCompleteDefaultsFalse() {
-    // Reset any previously stored value
-    UserDefaults.standard.removeObject(forKey: "onboarding_complete")
+    let suiteName = "test.onboarding.\(UUID().uuidString)"
+    let testDefaults = UserDefaults(suiteName: suiteName)!
+    // Explicitly set false to override any value inherited from .standard
+    testDefaults.set(false, forKey: "onboarding_complete")
     let restClient = MockRESTClient()
-    let repo = OnboardingRepositoryImpl(restClient: restClient)
+    let repo = OnboardingRepositoryImpl(restClient: restClient, defaults: testDefaults)
 
     #expect(repo.isComplete == false)
+
+    // Cleanup
+    testDefaults.removePersistentDomain(forName: suiteName)
 }

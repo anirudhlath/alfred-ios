@@ -59,3 +59,10 @@ Server code lives in the `alfred/` monorepo (separate repo).
 - `AppNotification` is used instead of `Notification` to avoid Foundation name collision
 - WebSocketClient is a singleton shared between Chat and Notification repositories
 - AppContainer.reconfigure() rewires everything when server config changes
+
+## Testing Gotchas
+
+- **Snapshot PNGs are in Xcode's Copy Bundle Resources** — never delete them from disk; use `withSnapshotTesting(record: .all)` to re-record, then remove the flag
+- **Swift 6 concurrency**: XCTestCase classes that create SwiftUI views need `@MainActor`
+- **UserDefaults in test host**: `.standard` retains values from prior simulator runs; inject a custom `UserDefaults(suiteName:)` with explicit values for isolation
+- **BuildProject vs test build**: `BuildProject` may succeed while test target fails (e.g., missing resources) — always check `GetBuildLog` after test failures

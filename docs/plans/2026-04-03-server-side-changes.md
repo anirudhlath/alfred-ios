@@ -19,14 +19,13 @@
 **Files:**
 - Modify: `bus/schemas/events.py:95,108`
 - Modify: `core/channels/web_server.py:229-236`
-- Modify: `shared/streams.py` (add CHANNEL_SOURCE_MAP)
-- Test: `tests/bus/test_events.py` (new)
+- Test: `tests/bus/test_events_ios.py` (new)
 - Test: `tests/core/channels/test_web_server_ios.py` (new)
 
 - [ ] **Step 1: Write failing test for `UserRequest` with `"ios"` channel**
 
 ```python
-# tests/bus/test_events.py
+# tests/bus/test_events_ios.py
 from bus.schemas.events import UserRequest
 
 
@@ -79,8 +78,9 @@ Expected: PASS
 
 ```python
 # tests/core/channels/test_web_server_ios.py
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
+
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -110,14 +110,12 @@ def test_websocket_uses_channel_from_client_message(app_with_mock_redis) -> None
     """When client sends channel='ios', the UserRequest should use that channel."""
     captured_request: dict[str, str] = {}
 
-    async def mock_publish_and_wait(redis, request, session_id, timeout=60.0):
+    async def mock_publish_and_wait(redis, request, session_id, timeout=30.0):
         captured_request["channel"] = request.channel
         captured_request["source"] = request.source
         return "test response"
 
     with patch("core.channels.web_server._publish_and_wait", mock_publish_and_wait):
-        from starlette.testclient import TestClient
-
         client = TestClient(app_with_mock_redis)
         with client.websocket_connect("/ws") as ws:
             ws.send_json({
@@ -141,13 +139,11 @@ def test_websocket_defaults_to_web_pwa_without_channel(app_with_mock_redis) -> N
     """When client omits channel field, default to web_pwa for backward compat."""
     captured_request: dict[str, str] = {}
 
-    async def mock_publish_and_wait(redis, request, session_id, timeout=60.0):
+    async def mock_publish_and_wait(redis, request, session_id, timeout=30.0):
         captured_request["channel"] = request.channel
         return "test response"
 
     with patch("core.channels.web_server._publish_and_wait", mock_publish_and_wait):
-        from starlette.testclient import TestClient
-
         client = TestClient(app_with_mock_redis)
         with client.websocket_connect("/ws") as ws:
             ws.send_json({
@@ -168,21 +164,16 @@ Expected: FAIL — channel is still hardcoded to `"web_pwa"`
 
 - [ ] **Step 7: Modify WebSocket handler to read `channel` from client message**
 
-First, add the channel-to-source mapping constant in `shared/streams.py` after the existing constants:
+Add the channel-to-source mapping constant in `core/channels/web_server.py` after the existing imports (this is business logic, not a Redis constant, so it belongs here — not in `shared/streams.py`):
 
 ```python
 # Channel-to-source mapping for UserRequest construction
-CHANNEL_SOURCE_MAP: dict[str, str] = {
+_CHANNEL_SOURCE_MAP: dict[str, str] = {
     "ios": "ios-app",
     "web_pwa": "web-pwa",
     "voice": "web-pwa",
     "signal": "signal-bridge",
 }
-```
-
-Then in `core/channels/web_server.py`, add the import at the top:
-```python
-from shared.streams import CHANNEL_SOURCE_MAP, USER_REQUESTS_STREAM, USER_RESPONSES_STREAM, decode_stream_value
 ```
 
 Replace lines 229-236:
@@ -191,7 +182,7 @@ Replace lines 229-236:
                 # Read channel from client (iOS sends "ios", web PWA omits or sends "web_pwa")
                 client_channel = data.get("channel", "web_pwa")
                 request = UserRequest(
-                    source=CHANNEL_SOURCE_MAP.get(client_channel, "web-pwa"),
+                    source=_CHANNEL_SOURCE_MAP.get(client_channel, "web-pwa"),
                     channel=client_channel,
                     session_id=session_id,
                     identity_claim=data.get("identity", "guest"),
@@ -202,7 +193,7 @@ Replace lines 229-236:
 
 - [ ] **Step 8: Run tests to verify they pass**
 
-Run: `python -m pytest tests/core/channels/test_web_server_ios.py tests/bus/test_events.py -v`
+Run: `python -m pytest tests/core/channels/test_web_server_ios.py tests/bus/test_events_ios.py -v`
 Expected: PASS
 
 - [ ] **Step 9: Run full test suite to check for regressions**
@@ -217,7 +208,7 @@ Run: `ruff check bus/ core/channels/ --fix && ruff format bus/ core/channels/ &&
 - [ ] **Step 11: Commit**
 
 ```bash
-git add bus/schemas/events.py core/channels/web_server.py tests/bus/test_events.py tests/core/channels/test_web_server_ios.py
+git add bus/schemas/events.py core/channels/web_server.py tests/bus/test_events_ios.py tests/core/channels/test_web_server_ios.py
 git commit -m "feat: add 'ios' channel and read channel from client WebSocket message"
 ```
 
@@ -239,7 +230,6 @@ from unittest.mock import MagicMock
 from fastapi import HTTPException
 
 
-@pytest.mark.asyncio
 async def test_localhost_ipv4_allowed() -> None:
     from core.channels.web_server import require_trusted_network
 
@@ -248,7 +238,6 @@ async def test_localhost_ipv4_allowed() -> None:
     await require_trusted_network(request)  # Should not raise
 
 
-@pytest.mark.asyncio
 async def test_localhost_ipv6_allowed() -> None:
     from core.channels.web_server import require_trusted_network
 
@@ -257,7 +246,6 @@ async def test_localhost_ipv6_allowed() -> None:
     await require_trusted_network(request)  # Should not raise
 
 
-@pytest.mark.asyncio
 async def test_tailscale_cgnat_allowed() -> None:
     from core.channels.web_server import require_trusted_network
 
@@ -266,7 +254,6 @@ async def test_tailscale_cgnat_allowed() -> None:
     await require_trusted_network(request)  # Should not raise
 
 
-@pytest.mark.asyncio
 async def test_tailscale_cgnat_edge_low() -> None:
     from core.channels.web_server import require_trusted_network
 
@@ -275,7 +262,6 @@ async def test_tailscale_cgnat_edge_low() -> None:
     await require_trusted_network(request)  # Should not raise
 
 
-@pytest.mark.asyncio
 async def test_tailscale_cgnat_edge_high() -> None:
     from core.channels.web_server import require_trusted_network
 
@@ -284,7 +270,6 @@ async def test_tailscale_cgnat_edge_high() -> None:
     await require_trusted_network(request)  # Should not raise
 
 
-@pytest.mark.asyncio
 async def test_external_ip_rejected() -> None:
     from core.channels.web_server import require_trusted_network
 
@@ -295,7 +280,6 @@ async def test_external_ip_rejected() -> None:
     assert exc_info.value.status_code == 403
 
 
-@pytest.mark.asyncio
 async def test_non_tailscale_100_range_rejected() -> None:
     """100.128.0.1 is outside the CGNAT /10 range."""
     from core.channels.web_server import require_trusted_network
@@ -307,7 +291,6 @@ async def test_non_tailscale_100_range_rejected() -> None:
     assert exc_info.value.status_code == 403
 
 
-@pytest.mark.asyncio
 async def test_testclient_allowed() -> None:
     """TestClient uses 'testclient' as host — must still be allowed for tests."""
     from core.channels.web_server import require_trusted_network
@@ -483,75 +466,35 @@ Expected: PASS
 
 ```python
 # tests/core/voice/test_stt_format.py
-from unittest.mock import patch, MagicMock
-import tempfile
+from unittest.mock import MagicMock, patch
+
+from core.voice.stt import WhisperSTT
+
+
+def _make_stt() -> WhisperSTT:
+    """Create a WhisperSTT instance with mocked model (skip __init__ model load)."""
+    stt = object.__new__(WhisperSTT)
+    stt._model = MagicMock()
+    return stt
 
 
 def test_transcribe_uses_correct_suffix_for_aac() -> None:
     """Verify the tempfile suffix matches the audio format."""
-    suffixes_used: list[str] = []
-    original_named_temp = tempfile.NamedTemporaryFile
-
-    class MockNamedTempFile:
-        def __init__(self, **kwargs):
-            suffixes_used.append(kwargs.get("suffix", ""))
-            self._f = original_named_temp(**kwargs)
-
-        def __enter__(self):
-            return self._f.__enter__()
-
-        def __exit__(self, *args):
-            return self._f.__exit__(*args)
-
-    with (
-        patch("core.voice.stt.tempfile.NamedTemporaryFile", MockNamedTempFile),
-        patch.object(
-            __import__("core.voice.stt", fromlist=["WhisperSTT"]).WhisperSTT,
-            "transcribe_file",
-            return_value="hello world",
-        ),
-    ):
-        from core.voice.stt import WhisperSTT
-
-        # Create instance with mocked model
-        stt = object.__new__(WhisperSTT)
-        stt._model = MagicMock()
+    stt = _make_stt()
+    with patch.object(stt, "transcribe_file", return_value="hello world"):
         stt.transcribe(b"fake-aac-bytes", language="en", audio_format="aac")
-
-    assert ".aac" in suffixes_used
+        call_args = stt.transcribe_file.call_args
+        # The temp file path should end with .aac
+        assert call_args[0][0].endswith(".aac")
 
 
 def test_transcribe_defaults_to_wav_suffix() -> None:
     """Without audio_format, suffix should be .wav for backward compat."""
-    suffixes_used: list[str] = []
-    original_named_temp = tempfile.NamedTemporaryFile
-
-    class MockNamedTempFile:
-        def __init__(self, **kwargs):
-            suffixes_used.append(kwargs.get("suffix", ""))
-            self._f = original_named_temp(**kwargs)
-
-        def __enter__(self):
-            return self._f.__enter__()
-
-        def __exit__(self, *args):
-            return self._f.__exit__(*args)
-
-    with (
-        patch("core.voice.stt.tempfile.NamedTemporaryFile", MockNamedTempFile),
-        patch.object(
-            __import__("core.voice.stt", fromlist=["WhisperSTT"]).WhisperSTT,
-            "transcribe_file",
-            return_value="hello world",
-        ),
-    ):
-        from core.voice.stt import WhisperSTT
-
-        stt = object.__new__(WhisperSTT)
-        stt._model = MagicMock()
+    stt = _make_stt()
+    with patch.object(stt, "transcribe_file", return_value="hello world"):
         stt.transcribe(b"fake-wav-bytes", language="en")
-
-    assert ".wav" in suffixes_used
+        call_args = stt.transcribe_file.call_args
+        assert call_args[0][0].endswith(".wav")
 ```
 
 - [ ] **Step 6: Run test to verify it fails**
@@ -716,7 +659,7 @@ def app(mock_redis):
 
 @pytest.fixture
 def client(app):
-    from starlette.testclient import TestClient
+    from fastapi.testclient import TestClient
 
     return TestClient(app)
 
@@ -877,7 +820,6 @@ def notification() -> Notification:
     )
 
 
-@pytest.mark.asyncio
 async def test_apns_adapter_sends_to_registered_devices(
     mock_redis: AsyncMock, notification: Notification
 ) -> None:
@@ -911,7 +853,6 @@ async def test_apns_adapter_sends_to_registered_devices(
     assert payload["aps"]["interruption-level"] == "active"
 
 
-@pytest.mark.asyncio
 async def test_apns_adapter_informational_no_sound(
     mock_redis: AsyncMock,
 ) -> None:
@@ -945,7 +886,6 @@ async def test_apns_adapter_informational_no_sound(
     assert payload["aps"]["interruption-level"] == "passive"
 
 
-@pytest.mark.asyncio
 async def test_apns_adapter_urgent_critical_alert(
     mock_redis: AsyncMock,
 ) -> None:
@@ -979,7 +919,6 @@ async def test_apns_adapter_urgent_critical_alert(
     assert payload["aps"]["interruption-level"] == "critical"
 
 
-@pytest.mark.asyncio
 async def test_apns_adapter_skips_when_no_devices(notification: Notification) -> None:
     from core.notifications.adapters.apns import APNsChannelAdapter
 
@@ -1024,11 +963,12 @@ Expected: FAIL — module not found
 from __future__ import annotations
 
 import json
-import logging
 import time
 from typing import TYPE_CHECKING, Any, ClassVar
 
-import jwt  # PyJWT — already available via authlib/other deps, or add to pyproject.toml
+import jwt  # PyJWT[crypto] — must be added to pyproject.toml
+
+from loguru import logger
 
 from core.notifications.channels import ChannelAdapter, ChannelRegistry
 from core.notifications.schema import Notification, Urgency
@@ -1037,8 +977,6 @@ from shared.streams import DEVICE_TOKENS_KEY
 if TYPE_CHECKING:
     import httpx
     import redis.asyncio as aioredis
-
-logger = logging.getLogger(__name__)
 
 APNS_PRODUCTION_URL = "https://api.push.apple.com"
 APNS_SANDBOX_URL = "https://api.sandbox.push.apple.com"
@@ -1156,19 +1094,19 @@ class APNsChannelAdapter(ChannelAdapter):
                 resp = await client.post(url, content=payload_bytes, headers=headers)
                 if resp.status_code != 200:
                     logger.warning(
-                        "APNs delivery failed for token %s: %s %s",
+                        "APNs delivery failed for token {}: {} {}",
                         device_token[:8],
                         resp.status_code,
                         resp.text,
                     )
                 else:
                     logger.info(
-                        "APNs notification sent (token=%s..., urgency=%s)",
+                        "APNs notification sent (token={}..., urgency={})",
                         device_token[:8],
                         notification.urgency.value,
                     )
             except Exception as exc:
-                logger.error("APNs delivery error for token %s: %s", device_token[:8], exc)
+                logger.error("APNs delivery error for token {}: {}", device_token[:8], exc)
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -1176,13 +1114,16 @@ class APNsChannelAdapter(ChannelAdapter):
 Run: `python -m pytest tests/core/notifications/test_apns_adapter.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Add PyJWT to project dependencies if not already present**
+- [ ] **Step 5: Add PyJWT and httpx[http2] to project dependencies**
 
-Check `pyproject.toml` for `PyJWT`. If missing:
+PyJWT is NOT in the current dependency tree — it must be added. The `[crypto]` extra pulls in `cryptography` for ES256 (APNs requires this). Also upgrade `httpx` to `httpx[http2]` for HTTP/2 support (required by APNs). Add a mypy override for `jwt.*` since PyJWT lacks complete type stubs.
 
-Run: `uv pip install PyJWT[crypto]`
+In `pyproject.toml`:
+- Add `"PyJWT[crypto]>=2.0"` to `dependencies`
+- Change `"httpx>=0.27"` to `"httpx[http2]>=0.27"`
+- Add to `[tool.mypy]`: `[[tool.mypy.overrides]]` with `module = "jwt.*"` and `ignore_missing_imports = true`
 
-And add `"PyJWT[crypto]>=2.0"` to the project's dependencies in `pyproject.toml`.
+Run: `uv pip install -e ".[dev,memory,voice,integrations]"` to install the new deps.
 
 - [ ] **Step 6: Lint and type-check**
 
@@ -1205,16 +1146,20 @@ git commit -m "feat: APNs delivery adapter for iOS push notifications"
 ### Task 7: Wire APNs Adapter into Channels Process
 
 **Files:**
-- Modify: `core/channels/__main__.py`
+- Modify: `core/channels/web_server.py` (inside `_lifespan()`)
 - Test: integration-level (manual — verify adapter is registered at startup)
 
-- [ ] **Step 1: Read the channels `__main__.py` to understand current wiring**
+> **Note:** The APNs adapter needs Redis access for device token lookups. Redis is only available inside the FastAPI `_lifespan()` function (stored as `app.state.redis`), NOT in `__main__.py`. Therefore, wiring must happen inside `_lifespan()` in `web_server.py`, alongside the existing delivery worker startup.
+>
+> **Broadcast model:** The notification dispatch system routes ALL notifications to ALL adapters that support the urgency level. The APNs adapter fires for every notification, does `hgetall` to find device tokens, and skips if none are registered. This is correct for a single-user system.
 
-Read `core/channels/__main__.py` to see how existing adapters (WebSocket, Voice) are registered.
+- [ ] **Step 1: Read `core/channels/web_server.py` `_lifespan()` to understand current wiring**
 
-- [ ] **Step 2: Add APNs adapter registration**
+Read the `_lifespan()` function to see where Redis is initialized and where delivery workers start.
 
-In `core/channels/__main__.py`, after the existing adapter registrations, add:
+- [ ] **Step 2: Add APNs adapter registration inside `_lifespan()`**
+
+In `core/channels/web_server.py`, inside the `_lifespan()` function, after Redis is initialized (`app.state.redis = ...`) and before `yield`, add:
 
 ```python
     # APNs adapter for iOS push notifications (requires credentials in Secrets Manager)
@@ -1226,13 +1171,18 @@ In `core/channels/__main__.py`, after the existing adapter registrations, add:
         apns_private_key = get_secret("apns", "private_key")
         apns_bundle_id = get_secret("apns", "bundle_id")
 
-        if apns_team_id and apns_key_id and apns_private_key and apns_bundle_id:
+        if (
+            apns_team_id is not None
+            and apns_key_id is not None
+            and apns_private_key is not None
+            and apns_bundle_id is not None
+        ):
             import core.notifications.adapters.apns  # noqa: F401 — trigger @register
             from core.notifications.adapters.apns import APNsChannelAdapter
             from core.notifications.channels import ChannelRegistry
 
             apns_adapter = APNsChannelAdapter(
-                redis=redis_pool,
+                redis=app.state.redis,
                 team_id=apns_team_id,
                 key_id=apns_key_id,
                 private_key=apns_private_key,
@@ -1254,7 +1204,7 @@ Expected: All tests pass (APNs adapter is optional — missing credentials skip 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add core/channels/__main__.py
+git add core/channels/web_server.py
 git commit -m "feat: wire APNs adapter into channels process startup"
 ```
 
@@ -1272,13 +1222,11 @@ The iOS app needs `notification_id` in WebSocket notification messages for dedup
 
 ```python
 # tests/core/notifications/test_ws_notification_id.py
-import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from core.notifications.schema import Notification, Urgency
 
 
-@pytest.mark.asyncio
 async def test_websocket_payload_includes_notification_id() -> None:
     from core.notifications.adapters.websocket import WebSocketChannelAdapter
 
@@ -1348,7 +1296,7 @@ Run: `python -m pytest -x -q`
 
 - [ ] **Step 4: Verify test count increased**
 
-Expected: Previous baseline was 519 tests. Should now have ~535+ tests.
+Expected: Previous baseline was 730 tests. Should now have ~750+ tests.
 
 - [ ] **Step 5: Commit any remaining fixes**
 
