@@ -25,17 +25,12 @@ final class ChatViewModel {
         guard self.container == nil else { return }
         self.container = container
 
-        // Restore persisted conversation or start a new one
         if let savedId = container.sessionRepository.restoreConversationId() {
             conversationId = savedId
         } else {
-            container.sessionRepository.saveConversationId(conversationId)
-            Task {
-                try? await container.messageStore.createConversation(id: conversationId)
-            }
+            persistNewConversation(container: container)
         }
 
-        // Restore persisted messages
         Task {
             do {
                 let restored = try await container.messageStore.fetchMessages(
@@ -47,22 +42,16 @@ final class ChatViewModel {
             }
         }
 
-        Task {
-            try? await container.connectUseCase.execute()
-        }
+        Task { try? await container.connectUseCase.execute() }
 
         Task {
             for await message in container.observeMessagesUseCase.execute() {
                 self.messages.append(message)
-                // Persist all incoming messages (user transcriptions + alfred responses)
                 try? await container.messageStore.save(message, conversationId: conversationId)
                 if message.role == .alfred {
                     self.isWaiting = false
-                    // Auto-play audio responses
                     if let audio = message.audio {
-                        Task {
-                            await container.audioService.player.play(audio)
-                        }
+                        await container.audioService.player.play(audio)
                     }
                 }
             }
@@ -74,7 +63,6 @@ final class ChatViewModel {
             }
         }
 
-        // Listen for session clear events from Settings
         Task {
             for await _ in NotificationCenter.default.notifications(named: .alfredSessionCleared) {
                 resetState()
@@ -123,7 +111,6 @@ final class ChatViewModel {
     // MARK: - Private
 
     private func startRecording(container: AppContainer) async {
-        // Request mic permission on first attempt
         if !micPermissionGranted {
             let granted = await container.audioService.requestMicrophonePermission()
             micPermissionGranted = granted
@@ -131,13 +118,11 @@ final class ChatViewModel {
         }
 
         do {
-            try container.audioService.configureAudioSession()
             recordedChunks = []
             let stream = try container.audioService.recorder.start(format: .aac)
             recordingStream = stream
             isRecording = true
 
-            // Collect audio chunks in background
             Task {
                 for await chunk in stream {
                     recordedChunks.append(chunk)
@@ -153,7 +138,9 @@ final class ChatViewModel {
         container.audioService.recorder.stop()
         isRecording = false
 
-        let audioData = recordedChunks.reduce(Data()) { $0 + $1 }
+        var audioData = Data()
+        audioData.reserveCapacity(recordedChunks.reduce(0) { $0 + $1.count })
+        recordedChunks.forEach { audioData.append($0) }
         recordedChunks = []
         recordingStream = nil
 
@@ -182,10 +169,12 @@ final class ChatViewModel {
         isRecording = false
         inputText = ""
         if let container {
-            container.sessionRepository.saveConversationId(conversationId)
-            Task {
-                try? await container.messageStore.createConversation(id: conversationId)
-            }
+            persistNewConversation(container: container)
         }
+    }
+
+    private func persistNewConversation(container: AppContainer) {
+        container.sessionRepository.saveConversationId(conversationId)
+        Task { try? await container.messageStore.createConversation(id: conversationId) }
     }
 }

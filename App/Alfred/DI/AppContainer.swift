@@ -79,7 +79,7 @@ final class AppContainer {
                         pendingNotifications.insert(notif, at: 0)
                     }
                 case .voiceNotification(_, let audio):
-                    Task { await audioService.player.play(audio) }
+                    await audioService.player.play(audio)
                 default:
                     break
                 }
