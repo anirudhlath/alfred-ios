@@ -23,7 +23,6 @@ final class AppContainer {
     private(set) var sendTextMessageUseCase: SendTextMessageUseCase
     private(set) var sendVoiceMessageUseCase: SendVoiceMessageUseCase
     private(set) var observeMessagesUseCase: ObserveMessagesUseCase
-    private(set) var observeNotificationsUseCase: ObserveNotificationsUseCase
     private(set) var registerForPushUseCase: RegisterForPushUseCase
     private(set) var submitOnboardingUseCase: SubmitOnboardingUseCase
     private(set) var manageIntegrationsUseCase: ManageIntegrationsUseCase
@@ -60,7 +59,6 @@ final class AppContainer {
         self.sendTextMessageUseCase = SendTextMessageUseCase(chatRepo: chatRepo, messageStore: msgStore)
         self.sendVoiceMessageUseCase = SendVoiceMessageUseCase(chatRepo: chatRepo, messageStore: msgStore)
         self.observeMessagesUseCase = ObserveMessagesUseCase(chatRepo: chatRepo)
-        self.observeNotificationsUseCase = ObserveNotificationsUseCase(notificationRepo: notifRepo)
         self.registerForPushUseCase = RegisterForPushUseCase(notificationRepo: notifRepo)
         self.submitOnboardingUseCase = SubmitOnboardingUseCase(onboardingRepo: onboardRepo)
         self.manageIntegrationsUseCase = ManageIntegrationsUseCase(integrationRepo: integRepo)
@@ -117,9 +115,11 @@ final class AppContainer {
         self.sendTextMessageUseCase = SendTextMessageUseCase(chatRepo: chatRepo, messageStore: messageStore)
         self.sendVoiceMessageUseCase = SendVoiceMessageUseCase(chatRepo: chatRepo, messageStore: messageStore)
         self.observeMessagesUseCase = ObserveMessagesUseCase(chatRepo: chatRepo)
-        self.observeNotificationsUseCase = ObserveNotificationsUseCase(notificationRepo: notifRepo)
         self.registerForPushUseCase = RegisterForPushUseCase(notificationRepo: notifRepo)
         self.submitOnboardingUseCase = SubmitOnboardingUseCase(onboardingRepo: onboardRepo)
         self.manageIntegrationsUseCase = ManageIntegrationsUseCase(integrationRepo: integRepo)
+
+        // Restart notification observation with the new repository
+        notificationObservationStarted = false
     }
 }

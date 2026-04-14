@@ -46,7 +46,6 @@
 		9D03AD0C4CE985DD8B96D2DF /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E29E4BE8379685E04416F8 /* KeychainStore.swift */; };
 		A03A1A378C33442B805BB7B4 /* NotificationsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6370242E531BB9CD1EF77DB /* NotificationsViewModel.swift */; };
 		A4FBF911E5CB998BA92FDC5C /* testChatViewWithMessages.1.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A785BBF3CB76FC467881252 /* testChatViewWithMessages.1.png */; };
-		A580155BFAA12B9D13049C66 /* ObserveNotificationsUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B25D2A5FDA0BC32B2A9608 /* ObserveNotificationsUseCase.swift */; };
 		A795248F554185CA81104CBD /* MapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5047ABB0C0ABD226FFA672 /* MapperTests.swift */; };
 		A898999ECFB596AAEB9458D1 /* ObserveMessagesUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2F2E2374CF241ED26D2CD8 /* ObserveMessagesUseCase.swift */; };
 		A9CF774B2F885EB500254866 /* NotificationsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CF774A2F885EB500254866 /* NotificationsViewModelTests.swift */; };
@@ -116,7 +115,6 @@
 		4B089F78437DE639400704E7 /* NotificationRepositoryImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRepositoryImpl.swift; sourceTree = "<group>"; };
 		4FB8754623D346D9F8FA78E0 /* BiometricService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricService.swift; sourceTree = "<group>"; };
 		5406E904FEF6DF53569A2188 /* SendVoiceMessageUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendVoiceMessageUseCase.swift; sourceTree = "<group>"; };
-		55B25D2A5FDA0BC32B2A9608 /* ObserveNotificationsUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObserveNotificationsUseCase.swift; sourceTree = "<group>"; };
 		584BDDC40FCF653756D9B349 /* AlfredKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlfredKit; path = Packages/AlfredKit; sourceTree = SOURCE_ROOT; };
 		596BEEF2EF5B83274EEE0A10 /* testNotificationsViewEmpty.1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = testNotificationsViewEmpty.1.png; sourceTree = "<group>"; };
 		5AED22E872384E8FFE7FFBC1 /* AlfredTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlfredTests.swift; sourceTree = "<group>"; };
@@ -477,7 +475,6 @@
 				93FC011F557E307AA7AE2AF0 /* ConnectUseCase.swift */,
 				049D6297E48AD5F7602D52D2 /* ManageIntegrationsUseCase.swift */,
 				DB2F2E2374CF241ED26D2CD8 /* ObserveMessagesUseCase.swift */,
-				55B25D2A5FDA0BC32B2A9608 /* ObserveNotificationsUseCase.swift */,
 				C04DDAE117F3A71B3A586DC8 /* RegisterForPushUseCase.swift */,
 				445B4BB1DC91F49A17AA1306 /* SendTextMessageUseCase.swift */,
 				5406E904FEF6DF53569A2188 /* SendVoiceMessageUseCase.swift */,
@@ -630,7 +627,6 @@
 				E670BF12F14E798BF8DEBB90 /* NotificationsView.swift in Sources */,
 				A03A1A378C33442B805BB7B4 /* NotificationsViewModel.swift in Sources */,
 				A898999ECFB596AAEB9458D1 /* ObserveMessagesUseCase.swift in Sources */,
-				A580155BFAA12B9D13049C66 /* ObserveNotificationsUseCase.swift in Sources */,
 				49E14FF5609A8D907D60C9B8 /* OnboardingFlowView.swift in Sources */,
 				47D2590271F787CABEBA75DC /* OnboardingMapper.swift in Sources */,
 				782443DF535211808E64FAD5 /* OnboardingRepositoryImpl.swift in Sources */,

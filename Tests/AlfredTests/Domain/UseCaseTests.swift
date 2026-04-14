@@ -58,7 +58,6 @@ final class MockSessionRepository: SessionRepositoryProtocol, @unchecked Sendabl
 final class MockNotificationRepository: NotificationRepositoryProtocol, @unchecked Sendable {
     var registeredToken: Data?
     var unregisterDeviceCalled = false
-    var notifications: AsyncStream<AppNotification> { AsyncStream { _ in } }
     var rawMessages: AsyncStream<ServerMessage> { AsyncStream { _ in } }
 
     func registerDevice(token: Data) async throws {
@@ -154,16 +153,6 @@ final class MockIntegrationRepository: IntegrationRepositoryProtocol, @unchecked
 
     let stream = useCase.execute()
     let _: AsyncStream<Message> = stream
-}
-
-// MARK: - ObserveNotificationsUseCase Tests
-
-@Test func observeNotificationsUseCaseReturnsStream() {
-    let notificationRepo = MockNotificationRepository()
-    let useCase = ObserveNotificationsUseCase(notificationRepo: notificationRepo)
-
-    let stream = useCase.execute()
-    let _: AsyncStream<AppNotification> = stream
 }
 
 // MARK: - RegisterForPushUseCase Tests

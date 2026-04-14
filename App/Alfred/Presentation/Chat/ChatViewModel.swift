@@ -1,6 +1,9 @@
 import Foundation
+import os
 import SwiftUI
 import AlfredKit
+
+private let log = Logger(subsystem: "com.anirudhlath.alfred", category: "ChatViewModel")
 
 @Observable
 @MainActor
@@ -10,6 +13,7 @@ final class ChatViewModel {
     var isRecording = false
     var isWaiting = false
     var inputText = ""
+    var errorMessage: String?
 
     private var conversationId = UUID()
     private var container: AppContainer?
@@ -38,7 +42,9 @@ final class ChatViewModel {
                     conversationId: conversationId
                 )
                 self.messages = restored
-            } catch {}
+            } catch {
+                log.error("Failed to restore messages: \(error)")
+            }
         }
 
         Task {
@@ -65,6 +71,13 @@ final class ChatViewModel {
                 self.connectionState = state
             }
         }
+
+        // Listen for session clear events from Settings
+        Task {
+            for await _ in NotificationCenter.default.notifications(named: .alfredSessionCleared) {
+                resetState()
+            }
+        }
     }
 
     func send() {
@@ -81,6 +94,7 @@ final class ChatViewModel {
                 )
                 messages.append(userMessage)
             } catch {
+                log.error("Failed to send message: \(error)")
                 isWaiting = false
             }
         }
@@ -127,7 +141,9 @@ final class ChatViewModel {
                     recordedChunks.append(chunk)
                 }
             }
-        } catch {}
+        } catch {
+            log.error("Failed to start recording: \(error)")
+        }
     }
 
     private func stopRecording() {
@@ -151,8 +167,17 @@ final class ChatViewModel {
                 )
                 messages.append(userMessage)
             } catch {
+                log.error("Failed to send voice message: \(error)")
                 isWaiting = false
             }
         }
+    }
+
+    func resetState() {
+        messages = []
+        conversationId = UUID()
+        isWaiting = false
+        isRecording = false
+        inputText = ""
     }
 }

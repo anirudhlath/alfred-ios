@@ -1,6 +1,10 @@
 import Foundation
 import SwiftUI
 
+extension Notification.Name {
+    static let alfredSessionCleared = Notification.Name("alfredSessionCleared")
+}
+
 @Observable
 @MainActor
 final class SettingsViewModel {
@@ -9,13 +13,22 @@ final class SettingsViewModel {
     var pushNotificationsEnabled = true
     private var container: AppContainer?
 
+    private static let pushEnabledKey = "push_notifications_enabled"
+
     func configure(with container: AppContainer) {
         self.container = container
+        // Restore persisted toggle state (defaults to true if never set)
+        if UserDefaults.standard.object(forKey: Self.pushEnabledKey) != nil {
+            pushNotificationsEnabled = UserDefaults.standard.bool(forKey: Self.pushEnabledKey)
+        }
     }
 
     func clearSession() {
         guard let container else { return }
         container.sessionRepository.clearSession()
+        container.pendingNotifications = []
+        // Post notification so ChatViewModel can reset its in-memory state
+        NotificationCenter.default.post(name: .alfredSessionCleared, object: nil)
         Task {
             try? await container.connectUseCase.execute()
         }
@@ -23,6 +36,7 @@ final class SettingsViewModel {
 
     func togglePushNotifications(enabled: Bool) {
         pushNotificationsEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: Self.pushEnabledKey)
         guard let container else { return }
         Task {
             if enabled {

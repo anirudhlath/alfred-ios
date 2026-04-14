@@ -21,6 +21,7 @@ final class ServerConfigViewModel {
         guard let container, let portInt = Int(port) else { return }
         let config = ServerConfig(host: host, port: portInt)
         container.reconfigure(with: config)
+        container.startNotificationObservation()
     }
 
     func testConnection() async {

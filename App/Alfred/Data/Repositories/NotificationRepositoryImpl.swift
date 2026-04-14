@@ -6,19 +6,6 @@ final class NotificationRepositoryImpl: NotificationRepositoryProtocol, @uncheck
     private let restClient: any RESTClientProtocol
     private var deviceTokenHex: String?
 
-    var notifications: AsyncStream<AppNotification> {
-        AsyncStream { continuation in
-            Task {
-                for await serverMsg in webSocketClient.messages {
-                    if let notification = NotificationMapper.toDomain(from: serverMsg) {
-                        continuation.yield(notification)
-                    }
-                }
-                continuation.finish()
-            }
-        }
-    }
-
     var rawMessages: AsyncStream<ServerMessage> {
         AsyncStream { continuation in
             Task {
