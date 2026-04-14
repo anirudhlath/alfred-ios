@@ -21,6 +21,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct AlfredApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.scenePhase) private var scenePhase
     @State private var container = AppContainer()
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "onboarding_complete")
 
@@ -35,10 +36,24 @@ struct AlfredApp: App {
                     .environment(container)
             }
             .task {
+                try? container.audioService.configureAudioSession()
+                container.startNotificationObservation()
                 let notificationService = NotificationService()
                 notificationService.configure(with: container)
                 appDelegate.notificationService = notificationService
                 await notificationService.requestAuthorization()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            switch newPhase {
+            case .background:
+                container.chatRepository.disconnect()
+            case .active:
+                Task {
+                    try? await container.connectUseCase.execute()
+                }
+            default:
+                break
             }
         }
     }

@@ -19,6 +19,22 @@ final class NotificationRepositoryImpl: NotificationRepositoryProtocol, @uncheck
         }
     }
 
+    var rawMessages: AsyncStream<ServerMessage> {
+        AsyncStream { continuation in
+            Task {
+                for await serverMsg in webSocketClient.messages {
+                    switch serverMsg {
+                    case .notification, .voiceNotification:
+                        continuation.yield(serverMsg)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+        }
+    }
+
     init(webSocketClient: any WebSocketClientProtocol, restClient: any RESTClientProtocol) {
         self.webSocketClient = webSocketClient
         self.restClient = restClient

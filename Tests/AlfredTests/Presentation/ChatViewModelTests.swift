@@ -28,3 +28,16 @@ import Testing
     #expect(vm.isWaiting == false)
     #expect(vm.messages.isEmpty)
 }
+
+@Test @MainActor func chatViewModelToggleRecordingWithoutContainerDoesNotCrash() {
+    let vm = ChatViewModel()
+    // Should not crash when no container is configured
+    vm.toggleRecording()
+    #expect(vm.isRecording == false)
+}
+
+@Test @MainActor func chatViewModelReconnectWithoutContainerDoesNotCrash() {
+    let vm = ChatViewModel()
+    vm.reconnect()
+    // No crash = success
+}

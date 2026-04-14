@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import Testing
 import AlfredKit
 @testable import Alfred
@@ -142,7 +143,8 @@ final class MockRESTClient: RESTClientProtocol, @unchecked Sendable {
     #expect(restored?.host == "10.0.0.1")
     #expect(restored?.port == 9090)
 
-    // Cleanup
+    // Cleanup — restore default so stale config doesn't leak into simulator
+    repo.saveServerConfig(ServerConfig.default)
     repo.clearSession()
 }
 
@@ -165,6 +167,91 @@ final class MockRESTClient: RESTClientProtocol, @unchecked Sendable {
     let restored = repo.restoreSessionId()
     #expect(restored == nil)
 }
+
+@Test func sessionRepoSavesAndRestoresConversationId() {
+    let repo = SessionRepositoryImpl()
+    let id = UUID()
+    repo.saveConversationId(id)
+
+    let restored = repo.restoreConversationId()
+    #expect(restored == id)
+
+    // Cleanup
+    repo.clearSession()
+}
+
+@Test func sessionRepoClearSessionRemovesConversationId() {
+    let repo = SessionRepositoryImpl()
+    let id = UUID()
+    repo.saveConversationId(id)
+    repo.clearSession()
+
+    let restored = repo.restoreConversationId()
+    #expect(restored == nil)
+}
+
+@Test func notificationRepoUnregistersDevice() async throws {
+    let wsClient = MockWebSocketClient()
+    let restClient = MockRESTClient()
+    let repo = NotificationRepositoryImpl(webSocketClient: wsClient, restClient: restClient)
+
+    // Register first to set the stored token
+    let token = Data([0xAB, 0xCD, 0xEF])
+    try await repo.registerDevice(token: token)
+
+    // Unregister
+    try await repo.unregisterDevice()
+    // After unregister, the internal token should be cleared —
+    // a second unregister should be a no-op (guard let hex fails)
+    try await repo.unregisterDevice()
+    // No error = success
+}
+
+// MARK: - MessageStoreImpl Tests
+
+@Test @MainActor func messageStoreCreateConversation() async throws {
+    let schema = Schema([MessageRecord.self, ConversationRecord.self])
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try ModelContainer(for: schema, configurations: [config])
+    let store = MessageStoreImpl(container: container)
+
+    let id = UUID()
+    try await store.createConversation(id: id)
+
+    let conversations = try await store.fetchConversations()
+    #expect(conversations.count == 1)
+    #expect(conversations.first?.id == id)
+}
+
+@Test @MainActor func messageStoreFetchMessagesForConversation() async throws {
+    let schema = Schema([MessageRecord.self, ConversationRecord.self])
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try ModelContainer(for: schema, configurations: [config])
+    let store = MessageStoreImpl(container: container)
+
+    let convId = UUID()
+    try await store.createConversation(id: convId)
+
+    let msg = Message(id: UUID(), role: .user, content: "Hello", timestamp: Date(), audio: nil)
+    try await store.save(msg, conversationId: convId)
+
+    let restored = try await store.fetchMessages(conversationId: convId)
+    #expect(restored.count == 1)
+    #expect(restored.first?.content == "Hello")
+    #expect(restored.first?.role == .user)
+}
+
+@Test @MainActor func messageStoreFetchReturnsEmptyForUnknownConversation() async throws {
+    let schema = Schema([MessageRecord.self, ConversationRecord.self])
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try ModelContainer(for: schema, configurations: [config])
+    let store = MessageStoreImpl(container: container)
+
+    let msgs = try await store.fetchMessages(conversationId: UUID())
+    #expect(msgs.isEmpty)
+}
+
+// MARK: - OnboardingRepository Tests
 
 @Test func onboardingRepoIsCompleteDefaultsFalse() {
     let suiteName = "test.onboarding.\(UUID().uuidString)"

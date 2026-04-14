@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import AlfredKit
 @testable import Alfred
 
 // MARK: - Mock Implementations
@@ -26,32 +27,46 @@ final class MockChatRepository: ChatRepositoryProtocol, @unchecked Sendable {
 
 final class MockMessageStore: MessageStoreProtocol, @unchecked Sendable {
     var savedMessages: [Message] = []
+    var createdConversationIds: [UUID] = []
+    var storedMessages: [UUID: [Message]] = [:]
 
     func save(_ message: Message, conversationId: UUID) async throws {
         savedMessages.append(message)
     }
-    func fetchMessages(conversationId: UUID) async throws -> [Message] { [] }
+    func fetchMessages(conversationId: UUID) async throws -> [Message] {
+        storedMessages[conversationId] ?? []
+    }
     func fetchConversations() async throws -> [Conversation] { [] }
+    func createConversation(id: UUID) async throws {
+        createdConversationIds.append(id)
+    }
     func deleteConversation(_ id: UUID) async throws {}
 }
 
 final class MockSessionRepository: SessionRepositoryProtocol, @unchecked Sendable {
     var savedSessionId: String?
+    var savedConversationId: UUID?
     func saveSessionId(_ id: String) { savedSessionId = id }
     func restoreSessionId() -> String? { savedSessionId }
-    func clearSession() { savedSessionId = nil }
+    func clearSession() { savedSessionId = nil; savedConversationId = nil }
     func saveServerConfig(_ config: ServerConfig) {}
     func restoreServerConfig() -> ServerConfig? { nil }
+    func saveConversationId(_ id: UUID) { savedConversationId = id }
+    func restoreConversationId() -> UUID? { savedConversationId }
 }
 
 final class MockNotificationRepository: NotificationRepositoryProtocol, @unchecked Sendable {
     var registeredToken: Data?
+    var unregisterDeviceCalled = false
     var notifications: AsyncStream<AppNotification> { AsyncStream { _ in } }
+    var rawMessages: AsyncStream<ServerMessage> { AsyncStream { _ in } }
 
     func registerDevice(token: Data) async throws {
         registeredToken = token
     }
-    func unregisterDevice() async throws {}
+    func unregisterDevice() async throws {
+        unregisterDeviceCalled = true
+    }
 }
 
 final class MockOnboardingRepository: OnboardingRepositoryProtocol, @unchecked Sendable {

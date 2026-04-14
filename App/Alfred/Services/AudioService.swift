@@ -2,8 +2,7 @@ import Foundation
 import AVFoundation
 import AlfredKit
 
-@MainActor
-final class AudioService {
+final class AudioService: @unchecked Sendable {
     let recorder: AudioRecorder
     let player: AudioPlayer
 

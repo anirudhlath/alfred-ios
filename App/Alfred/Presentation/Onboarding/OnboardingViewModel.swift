@@ -39,8 +39,4 @@ final class OnboardingViewModel {
         } catch {}
         isSubmitting = false
     }
-
-    var isComplete: Bool {
-        UserDefaults.standard.bool(forKey: "onboarding_complete")
-    }
 }

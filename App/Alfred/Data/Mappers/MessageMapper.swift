@@ -8,6 +8,8 @@ enum MessageMapper {
             return Message(id: UUID(), role: .alfred, content: text, timestamp: Date(), audio: audio)
         case .transcription(let text, _):
             return Message(id: UUID(), role: .user, content: text, timestamp: Date(), audio: nil)
+        case .error(let text, _):
+            return Message(id: UUID(), role: .alfred, content: text, timestamp: Date(), audio: nil)
         default:
             return nil
         }

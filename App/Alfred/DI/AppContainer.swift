@@ -12,6 +12,11 @@ final class AppContainer {
     private(set) var integrationRepository: IntegrationRepositoryImpl
     private(set) var onboardingRepository: OnboardingRepositoryImpl
     let messageStore: MessageStoreImpl
+    let audioService: AudioService
+
+    /// Notifications captured eagerly — regardless of which tab is active.
+    var pendingNotifications: [AppNotification] = []
+    private var notificationObservationStarted = false
 
     // Use cases
     private(set) var connectUseCase: ConnectUseCase
@@ -31,11 +36,13 @@ final class AppContainer {
         let wsClient = WebSocketClient()
         let rest = RESTClient(configuration: serverConfig)
         let msgStore = MessageStoreImpl()
+        let audio = AudioService()
 
         self.sessionRepository = sessionRepo
         self.webSocketClient = wsClient
         self.restClient = rest
         self.messageStore = msgStore
+        self.audioService = audio
 
         // Repositories
         let chatRepo = ChatRepositoryImpl(webSocketClient: wsClient, sessionRepository: sessionRepo)
@@ -57,6 +64,29 @@ final class AppContainer {
         self.registerForPushUseCase = RegisterForPushUseCase(notificationRepo: notifRepo)
         self.submitOnboardingUseCase = SubmitOnboardingUseCase(onboardingRepo: onboardRepo)
         self.manageIntegrationsUseCase = ManageIntegrationsUseCase(integrationRepo: integRepo)
+    }
+
+    /// Start observing notifications eagerly so none are missed before the tab is visited.
+    /// Text notifications go to the list; voice notifications auto-play immediately.
+    @MainActor
+    func startNotificationObservation() {
+        guard !notificationObservationStarted else { return }
+        notificationObservationStarted = true
+
+        Task {
+            for await serverMsg in notificationRepository.rawMessages {
+                switch serverMsg {
+                case .notification:
+                    if let notif = NotificationMapper.toDomain(from: serverMsg) {
+                        pendingNotifications.insert(notif, at: 0)
+                    }
+                case .voiceNotification(_, let audio):
+                    Task { await audioService.player.play(audio) }
+                default:
+                    break
+                }
+            }
+        }
     }
 
     /// Reconfigure all clients when server config changes in settings.

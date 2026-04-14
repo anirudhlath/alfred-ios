@@ -40,17 +40,6 @@ public struct CredentialFieldDTO: Codable, Sendable {
     }
 }
 
-/// Health check response.
-public struct HealthDTO: Codable, Sendable {
-    public let status: String
-    public let service: String
-
-    public init(status: String, service: String) {
-        self.status = status
-        self.service = service
-    }
-}
-
 /// Integration status response.
 public struct IntegrationStatusDTO: Codable, Sendable {
     public let name: String
@@ -59,14 +48,5 @@ public struct IntegrationStatusDTO: Codable, Sendable {
     public init(name: String, healthy: Bool) {
         self.name = name
         self.healthy = healthy
-    }
-}
-
-/// Generic status response from POST/PUT/DELETE endpoints.
-public struct StatusResponseDTO: Codable, Sendable {
-    public let status: String
-
-    public init(status: String) {
-        self.status = status
     }
 }

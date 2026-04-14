@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -49,6 +49,8 @@
 		A580155BFAA12B9D13049C66 /* ObserveNotificationsUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B25D2A5FDA0BC32B2A9608 /* ObserveNotificationsUseCase.swift */; };
 		A795248F554185CA81104CBD /* MapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5047ABB0C0ABD226FFA672 /* MapperTests.swift */; };
 		A898999ECFB596AAEB9458D1 /* ObserveMessagesUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2F2E2374CF241ED26D2CD8 /* ObserveMessagesUseCase.swift */; };
+		A9CF774B2F885EB500254866 /* NotificationsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CF774A2F885EB500254866 /* NotificationsViewModelTests.swift */; };
+		A9CF774D2F885EBB00254866 /* SettingsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9CF774C2F885EBB00254866 /* SettingsViewModelTests.swift */; };
 		AA6FE824629CF1534C91041D /* IntegrationDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EF05FAA4B299F1DE65FD7AF /* IntegrationDetailView.swift */; };
 		B24857DA507192BB8974F225 /* TypingIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B481D0BEB1DE1DDCF6472C6A /* TypingIndicatorView.swift */; };
 		B3E18F12044CF6A51FE9F66A /* AlfredApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C1D8B08ABAFE79AE837225 /* AlfredApp.swift */; };
@@ -137,6 +139,8 @@
 		9EB37ECBBD6DE2B70AC7CF83 /* AlfredTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AlfredTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A567701ECA6F72A773335015 /* UseCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UseCaseTests.swift; sourceTree = "<group>"; };
 		A6370242E531BB9CD1EF77DB /* NotificationsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsViewModel.swift; sourceTree = "<group>"; };
+		A9CF774A2F885EB500254866 /* NotificationsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsViewModelTests.swift; sourceTree = "<group>"; };
+		A9CF774C2F885EBB00254866 /* SettingsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModelTests.swift; sourceTree = "<group>"; };
 		ADE354D6A1790826D2CB7C53 /* ServerConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfigView.swift; sourceTree = "<group>"; };
 		AEF09DBE8AF6BE8A3D7A35B4 /* Alfred.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Alfred.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF096ED601D15ED39ABCAC50 /* SubmitOnboardingUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubmitOnboardingUseCase.swift; sourceTree = "<group>"; };
@@ -256,6 +260,8 @@
 				D2816EE5CD1C3B717A4B7006 /* ChatViewModelTests.swift */,
 				D865EB92A6CCEE93AE4EA735 /* SnapshotTests.swift */,
 				625EA928E92BAA18E8560C2A /* __Snapshots__ */,
+				A9CF774A2F885EB500254866 /* NotificationsViewModelTests.swift */,
+				A9CF774C2F885EBB00254866 /* SettingsViewModelTests.swift */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -560,7 +566,6 @@
 				75FE0141CC3941FD81C38B4E /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
 				062862EEECBB05222FFF230C /* XCLocalSwiftPackageReference "Packages/AlfredKit" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -654,10 +659,12 @@
 			files = (
 				B85614D6EA3D0A811B15E4EA /* AlfredTests.swift in Sources */,
 				FF98C56DD9BFD5948A3956F8 /* ChatViewModelTests.swift in Sources */,
+				A9CF774B2F885EB500254866 /* NotificationsViewModelTests.swift in Sources */,
 				98B8E164693CC5A134F33A5C /* EntityTests.swift in Sources */,
 				3EDA38F74B8939D3289F54C3 /* KeychainStoreTests.swift in Sources */,
 				A795248F554185CA81104CBD /* MapperTests.swift in Sources */,
 				5ED27B05542296BAAFB162C0 /* RepositoryTests.swift in Sources */,
+				A9CF774D2F885EBB00254866 /* SettingsViewModelTests.swift in Sources */,
 				3756342E837D85DA877A79E6 /* SnapshotTests.swift in Sources */,
 				3668A2C33DF5C5FEAA735608 /* UseCaseTests.swift in Sources */,
 			);

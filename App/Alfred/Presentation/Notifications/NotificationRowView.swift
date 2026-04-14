@@ -2,6 +2,8 @@ import SwiftUI
 
 struct NotificationRowView: View {
     let notification: AppNotification
+    var isPlaying = false
+    var onPlayAudio: (() -> Void)?
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -26,9 +28,14 @@ struct NotificationRowView: View {
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                 if notification.audio != nil {
-                    Image(systemName: "speaker.wave.2")
-                        .font(.caption)
-                        .foregroundStyle(.blue)
+                    Button {
+                        onPlayAudio?()
+                    } label: {
+                        Image(systemName: isPlaying ? "speaker.wave.3.fill" : "speaker.wave.2")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }

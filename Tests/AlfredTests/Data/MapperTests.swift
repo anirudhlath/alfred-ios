@@ -18,6 +18,21 @@ import AlfredKit
     #expect(message?.audio != nil)
 }
 
+@Test func messageMapperMapsErrorToAlfredMessage() {
+    let serverMsg = ServerMessage.error(text: "Something went wrong", sessionId: "abc")
+    let message = MessageMapper.toDomain(from: serverMsg)
+    #expect(message != nil)
+    #expect(message?.role == .alfred)
+    #expect(message?.content == "Something went wrong")
+    #expect(message?.audio == nil)
+}
+
+@Test func messageMapperReturnsNilForSession() {
+    let serverMsg = ServerMessage.session(sessionId: "abc")
+    let message = MessageMapper.toDomain(from: serverMsg)
+    #expect(message == nil)
+}
+
 @Test func messageMapperReturnsNilForNotification() {
     let serverMsg = ServerMessage.notification(title: "Alert", body: "Rain", urgency: "important")
     let message = MessageMapper.toDomain(from: serverMsg)

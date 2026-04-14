@@ -5,6 +5,7 @@ final class SessionRepositoryImpl: SessionRepositoryProtocol, Sendable {
         static let sessionId = "alfred_session_id"
         static let serverHost = "alfred_server_host"
         static let serverPort = "alfred_server_port"
+        static let conversationId = "alfred_conversation_id"
     }
 
     func saveSessionId(_ id: String) {
@@ -17,6 +18,16 @@ final class SessionRepositoryImpl: SessionRepositoryProtocol, Sendable {
 
     func clearSession() {
         KeychainStore.delete(key: Keys.sessionId)
+        KeychainStore.delete(key: Keys.conversationId)
+    }
+
+    func saveConversationId(_ id: UUID) {
+        KeychainStore.save(key: Keys.conversationId, value: id.uuidString)
+    }
+
+    func restoreConversationId() -> UUID? {
+        guard let str = KeychainStore.load(key: Keys.conversationId) else { return nil }
+        return UUID(uuidString: str)
     }
 
     func saveServerConfig(_ config: ServerConfig) {

@@ -6,10 +6,39 @@ import SwiftUI
 final class SettingsViewModel {
     var integrations: [Integration] = []
     var isLoading = false
+    var pushNotificationsEnabled = true
     private var container: AppContainer?
 
     func configure(with container: AppContainer) {
         self.container = container
+    }
+
+    func clearSession() {
+        guard let container else { return }
+        container.sessionRepository.clearSession()
+        Task {
+            try? await container.connectUseCase.execute()
+        }
+    }
+
+    func togglePushNotifications(enabled: Bool) {
+        pushNotificationsEnabled = enabled
+        guard let container else { return }
+        Task {
+            if enabled {
+                await requestAndRegisterPush()
+            } else {
+                try? await container.notificationRepository.unregisterDevice()
+            }
+        }
+    }
+
+    private func requestAndRegisterPush() async {
+        // Re-registering triggers APNs to send the token via AppDelegate,
+        // which calls registerForPushUseCase automatically.
+        await MainActor.run {
+            UIApplication.shared.registerForRemoteNotifications()
+        }
     }
 
     func loadIntegrations() async {

@@ -31,7 +31,11 @@ struct NotificationsView: View {
             ForEach(viewModel.groupedByDate, id: \.0) { dateString, items in
                 Section(dateString) {
                     ForEach(items) { notification in
-                        NotificationRowView(notification: notification)
+                        NotificationRowView(
+                            notification: notification,
+                            isPlaying: viewModel.playingNotificationId == notification.id,
+                            onPlayAudio: { viewModel.playAudio(notification) }
+                        )
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
                                     viewModel.dismiss(notification)

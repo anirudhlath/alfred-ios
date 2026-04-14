@@ -52,6 +52,14 @@ final class MessageStoreImpl: MessageStoreProtocol, @unchecked Sendable {
     }
 
     @MainActor
+    func createConversation(id: UUID) async throws {
+        let context = container.mainContext
+        let record = ConversationRecord(id: id, createdAt: Date())
+        context.insert(record)
+        try context.save()
+    }
+
+    @MainActor
     func fetchConversations() async throws -> [Conversation] {
         let context = container.mainContext
         let descriptor = FetchDescriptor<ConversationRecord>(

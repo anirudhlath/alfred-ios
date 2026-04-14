@@ -17,7 +17,7 @@ struct ChatView: View {
                 text: $viewModel.inputText,
                 isRecording: viewModel.isRecording,
                 onSend: { viewModel.send() },
-                onToggleRecording: { viewModel.isRecording.toggle() }
+                onToggleRecording: { viewModel.toggleRecording() }
             )
         }
         .navigationTitle("Alfred")

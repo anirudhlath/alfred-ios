@@ -43,6 +43,19 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Notifications") {
+                Toggle("Push Notifications", isOn: Binding(
+                    get: { viewModel.pushNotificationsEnabled },
+                    set: { viewModel.togglePushNotifications(enabled: $0) }
+                ))
+            }
+
+            Section("Session") {
+                Button("Clear Session", role: .destructive) {
+                    viewModel.clearSession()
+                }
+            }
+
             Section("App") {
                 HStack {
                     Text("Version")
