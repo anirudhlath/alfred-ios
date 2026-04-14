@@ -34,9 +34,14 @@ final class NotificationsViewModel {
     }
 
     var groupedByDate: [(String, [AppNotification])] {
+        let calendar = Calendar.current
         let grouped = Dictionary(grouping: notifications) { notification in
-            notification.timestamp.formatted(date: .abbreviated, time: .omitted)
+            calendar.startOfDay(for: notification.timestamp)
         }
-        return grouped.sorted { $0.key > $1.key }
+        return grouped
+            .sorted { $0.key > $1.key }
+            .map { (date, items) in
+                (date.formatted(date: .abbreviated, time: .omitted), items)
+            }
     }
 }

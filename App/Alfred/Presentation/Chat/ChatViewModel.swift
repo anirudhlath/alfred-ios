@@ -54,6 +54,8 @@ final class ChatViewModel {
         Task {
             for await message in container.observeMessagesUseCase.execute() {
                 self.messages.append(message)
+                // Persist all incoming messages (user transcriptions + alfred responses)
+                try? await container.messageStore.save(message, conversationId: conversationId)
                 if message.role == .alfred {
                     self.isWaiting = false
                     // Auto-play audio responses
@@ -179,5 +181,11 @@ final class ChatViewModel {
         isWaiting = false
         isRecording = false
         inputText = ""
+        if let container {
+            container.sessionRepository.saveConversationId(conversationId)
+            Task {
+                try? await container.messageStore.createConversation(id: conversationId)
+            }
+        }
     }
 }
