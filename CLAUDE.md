@@ -36,16 +36,42 @@ All Xcode operations MUST go through the native Xcode MCP tools (`xcrun mcpbridg
 6. Fix, repeat
 ```
 
+```bash
+# AlfredKit package tests (standalone, no Xcode project needed)
+cd Packages/AlfredKit && swift test
+
+# Simulator: build, install, and launch (Debug)
+xcodebuild -project Alfred.xcodeproj -scheme Alfred -configuration Debug \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -derivedDataPath build/ build
+xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/Alfred.app
+xcrun simctl launch booted com.anirudhlath.alfred
+
+# Reset simulator (clears Keychain, UserDefaults, SwiftData)
+xcrun simctl erase <device-id>
+```
+
 ## Key Paths
 
 - `Alfred.xcodeproj` — Xcode project (tracked in git, managed by Xcode)
 - `Packages/AlfredKit/` — networking SDK (WebSocket, REST, Audio, DTOs)
+  - `Client/WebSocketClient.swift` — single WebSocket connection, `Broadcaster<T>` for multi-consumer streams
+  - `Client/ServerMessage.swift` — all server→client message types (response, notification, error, etc.)
+  - `Client/ClientMessage.swift` — client→server message encoding (text, audio, channel: "ios")
+  - `Audio/AudioRecorder.swift` — AVAudioEngine tap → `AsyncStream<Data>`
+  - `Audio/AudioPlayer.swift` — AVAudioPlayer wrapper with async completion
 - `App/Alfred/Domain/` — entities, repository protocols, use cases (pure Swift)
 - `App/Alfred/Data/` — repository impls, mappers, Keychain, SwiftData
+  - `Mappers/MessageMapper.swift` — ServerMessage → Message (response, transcription, error)
+  - `Mappers/NotificationMapper.swift` — ServerMessage → AppNotification
+  - `Local/MessageStoreImpl.swift` — SwiftData persistence (MessageRecord, ConversationRecord)
+  - `Local/KeychainStore.swift` — SecItem wrapper (service: `com.anirudhlath.alfred`)
 - `App/Alfred/Presentation/` — SwiftUI views + @Observable ViewModels
-- `App/Alfred/DI/AppContainer.swift` — dependency injection wiring
+- `App/Alfred/DI/AppContainer.swift` — dependency injection + eager notification observation
 - `App/Alfred/Services/` — platform services (Audio, Biometric, Notification)
-- `Tests/AlfredTests/` — app target tests (domain, data, presentation, snapshots)
+- `Tests/AlfredTests/` — 69 tests (domain, data, presentation, snapshots)
+- `docs/qa-backlog/` — manual test cases for hardware/integration features
+- `docs/backlog/` — deferred work tickets by priority
 
 ## Server Connection
 
@@ -57,13 +83,47 @@ Server code lives in the `alfred/` monorepo (separate repo).
 - Domain layer is pure Swift — no framework imports except Foundation for UUID/Date
 - `AppConnectionState` is the domain-level connection state (not AlfredKit.ConnectionState)
 - `AppNotification` is used instead of `Notification` to avoid Foundation name collision
-- WebSocketClient is a singleton shared between Chat and Notification repositories
-- AppContainer.reconfigure() rewires everything when server config changes
-- Notification observation starts eagerly in `AlfredApp.task` (not lazily on tab visit) — `AppContainer.pendingNotifications` captures all notifications regardless of active tab
-- `rawMessages` stream on `NotificationRepositoryImpl` provides typed `ServerMessage` dispatch — `.notification` goes to the list, `.voiceNotification` auto-plays audio
-- `Notification.Name.alfredSessionCleared` bridges Settings → ChatViewModel for session reset
-- Voice pipeline: `AudioService` wraps `AudioRecorder`/`AudioPlayer` from AlfredKit, injected via `AppContainer`
+- WebSocketClient uses `Broadcaster<T>` for multi-consumer AsyncStreams — each subscriber (chat, notifications) gets independent copies of all messages
+- AppContainer.reconfigure() rewires everything when server config changes — must be followed by `startNotificationObservation()` (called automatically from `ServerConfigViewModel.save()`)
 - `ServerConfig.default` is `localhost:8081` in DEBUG, `100.100.1.1:8081` in RELEASE — Keychain-stored config takes priority
+
+### Notification Pipeline
+
+```
+Server → WebSocket → Broadcaster → NotificationRepositoryImpl.rawMessages
+  → AppContainer.startNotificationObservation() (eager, runs at startup)
+    → .notification → NotificationMapper → pendingNotifications[] → NotificationsView
+    → .voiceNotification → AudioPlayer.play() (auto-play, not added to list)
+```
+
+- Observation starts in `AlfredApp.task`, NOT on Notifications tab visit
+- `NotificationsViewModel.notifications` is a computed property backed by `AppContainer.pendingNotifications`
+- `Notification.Name.alfredSessionCleared` bridges Settings → ChatViewModel for session reset
+
+### Message Pipeline
+
+```
+Server → WebSocket → Broadcaster → ChatRepositoryImpl.messages
+  → MessageMapper → ObserveMessagesUseCase → ChatViewModel
+    → append to messages[] + persist to SwiftData
+    → if .alfred + audio → AudioPlayer.play()
+```
+
+- All incoming messages (Alfred responses + transcriptions) are persisted to SwiftData
+- Conversation ID persisted in Keychain, restored on launch
+
+### Voice Pipeline
+
+- `AudioService` wraps `AudioRecorder`/`AudioPlayer` from AlfredKit, injected via `AppContainer`
+- Mic tap → `AudioRecorder.start(.aac)` → `AsyncStream<Data>` → chunks collected → `SendVoiceMessageUseCase`
+- Audio session configured once at app startup (`AlfredApp.task`)
+
+### Concurrency Model
+
+- `@Observable` + `@MainActor` on all ViewModels — SwiftUI observation is thread-safe
+- `@unchecked Sendable` on repository impls and AlfredKit types — mutable state is accessed from MainActor or via cooperative async
+- `Broadcaster<T>` uses `NSLock` for thread-safe subscriber management
+- Known issue: `AudioPlayer` has unprotected mutable state (see `docs/backlog/medium/architect-review-refactors.md`)
 
 ## Testing Gotchas
 
