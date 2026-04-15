@@ -59,6 +59,11 @@ Server code lives in the `alfred/` monorepo (separate repo).
 - `AppNotification` is used instead of `Notification` to avoid Foundation name collision
 - WebSocketClient is a singleton shared between Chat and Notification repositories
 - AppContainer.reconfigure() rewires everything when server config changes
+- Notification observation starts eagerly in `AlfredApp.task` (not lazily on tab visit) — `AppContainer.pendingNotifications` captures all notifications regardless of active tab
+- `rawMessages` stream on `NotificationRepositoryImpl` provides typed `ServerMessage` dispatch — `.notification` goes to the list, `.voiceNotification` auto-plays audio
+- `Notification.Name.alfredSessionCleared` bridges Settings → ChatViewModel for session reset
+- Voice pipeline: `AudioService` wraps `AudioRecorder`/`AudioPlayer` from AlfredKit, injected via `AppContainer`
+- `ServerConfig.default` is `localhost:8081` in DEBUG, `100.100.1.1:8081` in RELEASE — Keychain-stored config takes priority
 
 ## Testing Gotchas
 
@@ -66,3 +71,5 @@ Server code lives in the `alfred/` monorepo (separate repo).
 - **Swift 6 concurrency**: XCTestCase classes that create SwiftUI views need `@MainActor`
 - **UserDefaults in test host**: `.standard` retains values from prior simulator runs; inject a custom `UserDefaults(suiteName:)` with explicit values for isolation
 - **BuildProject vs test build**: `BuildProject` may succeed while test target fails (e.g., missing resources) — always check `GetBuildLog` after test failures
+- **Keychain persists across simulator uninstall** — test-written values (e.g. `ServerConfig`) leak into app runs on the same simulator. Tests that write to Keychain must restore defaults in cleanup. Use `xcrun simctl erase` to fully reset.
+- **Snapshot device mismatch** — snapshots recorded on one simulator device (e.g. iPhone 16 Pro) fail on another (iPhone 17 Pro). Re-record with `withSnapshotTesting(record: .all)`, run tests, then remove the flag.
