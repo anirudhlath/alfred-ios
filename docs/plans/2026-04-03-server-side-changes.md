@@ -250,7 +250,7 @@ async def test_tailscale_cgnat_allowed() -> None:
     from core.channels.web_server import require_trusted_network
 
     request = MagicMock()
-    request.client.host = "100.100.50.25"
+    request.client.host = "192.0.2.50"
     await require_trusted_network(request)  # Should not raise
 
 

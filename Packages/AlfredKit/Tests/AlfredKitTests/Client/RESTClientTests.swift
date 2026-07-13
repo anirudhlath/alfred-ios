@@ -51,7 +51,7 @@ func makeTestRESTClient() -> RESTClient {
     config.protocolClasses = [MockURLProtocol.self]
     let session = URLSession(configuration: config)
     return RESTClient(
-        configuration: ServerConfiguration(host: "100.100.1.1", port: 8081),
+        configuration: ServerConfiguration(host: "192.0.2.1", port: 8081),
         session: session
     )
 }

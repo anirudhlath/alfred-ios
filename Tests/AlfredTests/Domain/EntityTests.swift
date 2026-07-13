@@ -30,7 +30,7 @@ import Testing
 }
 
 @Test func serverConfigURLs() {
-    let config = ServerConfig(host: "100.100.1.1", port: 8081)
-    #expect(config.host == "100.100.1.1")
+    let config = ServerConfig(host: "192.0.2.1", port: 8081)
+    #expect(config.host == "192.0.2.1")
     #expect(config.port == 8081)
 }

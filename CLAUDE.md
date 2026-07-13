@@ -85,7 +85,7 @@ Server code lives in the `alfred/` monorepo (separate repo).
 - `AppNotification` is used instead of `Notification` to avoid Foundation name collision
 - WebSocketClient uses `Broadcaster<T>` for multi-consumer AsyncStreams — each subscriber (chat, notifications) gets independent copies of all messages
 - AppContainer.reconfigure() rewires everything when server config changes — must be followed by `startNotificationObservation()` (called automatically from `ServerConfigViewModel.save()`)
-- `ServerConfig.default` is `localhost:8081` in DEBUG, `100.100.1.1:8081` in RELEASE — Keychain-stored config takes priority
+- `ServerConfig.default` is `localhost:8081` in DEBUG, empty host in RELEASE (user must configure in Settings) — Keychain-stored config takes priority
 
 ### Notification Pipeline
 

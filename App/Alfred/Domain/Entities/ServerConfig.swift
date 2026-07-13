@@ -5,6 +5,8 @@ struct ServerConfig: Sendable {
     #if DEBUG
     static let `default` = ServerConfig(host: "localhost", port: 8081)
     #else
-    static let `default` = ServerConfig(host: "100.100.1.1", port: 8081)
+    /// No default host in release builds — the user must set their server
+    /// address in Settings → Server Config (Keychain config takes priority).
+    static let `default` = ServerConfig(host: "", port: 8081)
     #endif
 }
