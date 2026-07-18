@@ -115,3 +115,23 @@ import Testing
     #expect(json["device_token"] as? String == "abc123")
     #expect(json["platform"] as? String == "ios")
 }
+
+@Test func textMessageDTOIncludesTimezone() throws {
+    let dto = TextMessageDTO(content: "hi", identity: "sir")
+    let data = try JSONEncoder().encode(dto)
+    let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    #expect(json["timezone"] as? String == TimeZone.current.identifier)
+}
+
+@Test func audioMessageDTOIncludesTimezone() throws {
+    let dto = AudioMessageDTO(content: "data:audio/aac;base64,AA==", identity: "sir")
+    let data = try JSONEncoder().encode(dto)
+    let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+    #expect(json["timezone"] as? String == TimeZone.current.identifier)
+}
+
+@Test func textMessageDTODecodesWithoutTimezone() throws {
+    let legacy = #"{"type":"text","content":"hi","identity":"sir","channel":"ios"}"#
+    let dto = try JSONDecoder().decode(TextMessageDTO.self, from: Data(legacy.utf8))
+    #expect(dto.timezone == nil)
+}

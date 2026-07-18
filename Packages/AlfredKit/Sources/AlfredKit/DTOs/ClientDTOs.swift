@@ -8,17 +8,19 @@ public struct TextMessageDTO: Codable, Sendable {
     public let identity: String
     public let channel: String
     public let sessionId: String?
+    public let timezone: String?
 
-    public init(type: String = "text", content: String, identity: String, channel: String = "ios", sessionId: String? = nil) {
+    public init(type: String = "text", content: String, identity: String, channel: String = "ios", sessionId: String? = nil, timezone: String? = TimeZone.current.identifier) {
         self.type = type
         self.content = content
         self.identity = identity
         self.channel = channel
         self.sessionId = sessionId
+        self.timezone = timezone
     }
 
     enum CodingKeys: String, CodingKey {
-        case type, content, identity, channel
+        case type, content, identity, channel, timezone
         case sessionId = "session_id"
     }
 
@@ -29,6 +31,7 @@ public struct TextMessageDTO: Codable, Sendable {
         try container.encode(identity, forKey: .identity)
         try container.encode(channel, forKey: .channel)
         try container.encodeIfPresent(sessionId, forKey: .sessionId)
+        try container.encodeIfPresent(timezone, forKey: .timezone)
     }
 }
 
@@ -38,12 +41,14 @@ public struct AudioMessageDTO: Codable, Sendable {
     public let content: String
     public let identity: String
     public let channel: String
+    public let timezone: String?
 
-    public init(type: String = "audio", content: String, identity: String, channel: String = "ios") {
+    public init(type: String = "audio", content: String, identity: String, channel: String = "ios", timezone: String? = TimeZone.current.identifier) {
         self.type = type
         self.content = content
         self.identity = identity
         self.channel = channel
+        self.timezone = timezone
     }
 }
 
