@@ -133,3 +133,13 @@ Server → WebSocket → Broadcaster → ChatRepositoryImpl.messages
 - **BuildProject vs test build**: `BuildProject` may succeed while test target fails (e.g., missing resources) — always check `GetBuildLog` after test failures
 - **Keychain persists across simulator uninstall** — test-written values (e.g. `ServerConfig`) leak into app runs on the same simulator. Tests that write to Keychain must restore defaults in cleanup. Use `xcrun simctl erase` to fully reset.
 - **Snapshot device mismatch** — snapshots recorded on one simulator device (e.g. iPhone 16 Pro) fail on another (iPhone 17 Pro). Re-record with `withSnapshotTesting(record: .all)`, run tests, then remove the flag.
+
+## Branching & PRs
+
+- PR-only; branch `<type>/<slug>` (`feat|fix|chore|docs|refactor|test|ci|perf`); PR title
+  is a conventional commit line (it becomes the squash commit).
+- Squash-only; branches auto-delete on merge; never reuse a branch.
+- Worktree discipline: the main checkout stays parked on the trunk and is pull-only —
+  never commit from it. One worktree per topic branch; delete it when its PR merges.
+- Never emit `[skip ci]`/`[no ci]` on PR branches.
+- CI gate is the single `ci-ok` aggregate check (swift, pr-title).
