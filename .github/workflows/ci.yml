@@ -20,8 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Test
-        # Exclusions below are CI-environment limitations, not app bugs (both documented
-        # in task-12b-report.md and CLAUDE.md's Testing Gotchas):
+        # Exclusions below are CI-environment limitations, not app bugs (tracked in
+        # docs/backlog/medium/reenable-ci-excluded-tests.md and CLAUDE.md's Testing
+        # Gotchas):
         #  - Snapshot tests (4 XCTest classes) are recorded against a specific simulator
         #    device/OS; the macos-15 runner's iPhone 16 doesn't bit-match, so they fail
         #    on image/OS drift rather than a real regression (see CLAUDE.md: "Snapshot
