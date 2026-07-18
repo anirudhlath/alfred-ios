@@ -1,4 +1,4 @@
-import Foundation
+@preconcurrency import Foundation
 import os
 import SwiftUI
 import AlfredKit
@@ -64,8 +64,27 @@ final class ChatViewModel {
         }
 
         Task {
-            for await _ in NotificationCenter.default.notifications(named: .alfredSessionCleared) {
+            for await _ in Self.sessionClearedEvents() {
                 resetState()
+            }
+        }
+    }
+
+    /// Bridges `NotificationCenter`'s block-based API into a `Void`-typed `AsyncStream`.
+    /// `NotificationCenter.default.notifications(named:)` yields a non-`Sendable`
+    /// `Notification`, which Swift 6 strict concurrency rejects when the sequence is
+    /// awaited from a `@MainActor` context (its `AsyncIteratorProtocol.next()` requirement
+    /// is nonisolated). Re-wrapping as `AsyncStream<Void>` avoids sending the notification
+    /// itself across the actor boundary.
+    private static func sessionClearedEvents() -> AsyncStream<Void> {
+        AsyncStream { continuation in
+            let token = NotificationCenter.default.addObserver(
+                forName: .alfredSessionCleared, object: nil, queue: .main
+            ) { _ in
+                continuation.yield(())
+            }
+            continuation.onTermination = { _ in
+                NotificationCenter.default.removeObserver(token)
             }
         }
     }
